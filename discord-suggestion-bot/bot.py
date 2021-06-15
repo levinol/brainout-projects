@@ -9,19 +9,16 @@ import requests
 from threading import Timer
 import datetime
 
-from config import settings
+from config import settings, submission_embed, simplified_embed
 
 client = commands.Bot(command_prefix=settings['prefix'])
 token = settings['token']
 submit_id = settings['submit_channel']
 event_id= settings['event_channel']
 
+subm_embed = Embed.from_dict(submission_embed)
 
-subm_embed=discord.Embed(title="Improper usage of 'Submission'", description="Make submission. Note that you don't need to include the square brackets.", color=0x9b0389)
-subm_embed.add_field(name="Usage:\n.submission [main/event] [message] [d=description] [optional attachment]", value="Make a submission.", inline=False)
-subm_embed.add_field(name=".submission [clear/remove] [message id]", value="Clear all optional descriptions/Remove a submission.", inline=False)
-subm_embed.add_field(name=".submission [add/addendum] [message id] [message] [optional attachment]", value="Add a addendum/attachment to a submission.", inline=False)
-subm_embed.add_field(name="Aliases:", value="suggest, submit", inline=False)
+simp_embed = Embed.from_dict(simplified_embed)
 
 
 @client.command() # Моя первая команда
@@ -32,26 +29,29 @@ async def hello(ctx):
 
 @client.remove_command('help')
 @client.command()
-async def help(ctx): 
-    await ctx.send(embed=subm_embed)
+async def help(ctx, type_help='r'): 
+    if type_help == 'r':
+        await ctx.send(embed=subm_embed)
+    elif type_help == 's':
+        await ctx.send(embed=simp_embed)
 
 
 
 @client.command()
-async def submit(ctx, task_type, *, args):
+async def submission(ctx, task_type, *, args):
     print(task_type, args)
     if task_type == 'main' or task_type == 'event':
-        await submit_func(ctx, task_type, args)
+        await submit(ctx, args=args, task_type=task_type)
     elif task_type == 'add' or task_type == 'addendum':
-        await update_func(ctx, task_type, args)
+        await add(ctx, args=args, task_type=task_type)
     elif task_type == 'remove' or  task_type == 'clear':
-        await remove_func(ctx, task_type, args)
+        await remove(ctx, msg_id=args, task_type=task_type)
     else:
         await ctx.send(embed=subm_embed)
 
 
-
-async def submit_func(ctx, task_type, args): # submit команда создающая embed msg, добавляющая message_id и реакции сразу после создания.
+@client.command()
+async def submit(ctx, *, args, task_type='main'): # submit команда создающая embed msg, добавляющая message_id и реакции сразу после создания.
     print(args)
     msg = args
     author = ctx.message.author
@@ -87,7 +87,8 @@ async def submit_func(ctx, task_type, args): # submit команда созда�
 
 
 @client.command()
-async def update_func(ctx, task_type, args): # команда, добавляющая ссылку и текст на отправленный пнг файл
+async def add(ctx, *, args, task_type='add'): # команда, добавляющая ссылку и текст на отправленный пнг файл
+    print(args)
     submit_channel =client.get_channel(submit_id)
     args_splitted = args.split(' ', 1)
     msg_id = args_splitted[0]
@@ -122,7 +123,7 @@ async def update_func(ctx, task_type, args): # команда, добавляю�
     await msg.edit(embed=embed)
 
 @client.command()
-async def remove_func(ctx, task_type, msg_id): #команда, удаляющая сообщение или очищающая поля
+async def remove(ctx, msg_id, task_type='remove'): #команда, удаляющая сообщение или очищающая поля
     submit_channel =client.get_channel(submit_id)
     msg = await submit_channel.fetch_message(msg_id)
 
@@ -193,7 +194,8 @@ async def on_message(message):
     await client.process_commands(message)
 
     if message.content == "test":
-        await message.channel.send("test")
+        pass
+        #await message.channel.send("test")
 
     if message.channel.id == settings['submit_channel']: # обрабатываем сообщения в канале sumbit_channel
         submit_channel = client.get_channel(submit_id)
