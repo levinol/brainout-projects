@@ -1,6 +1,6 @@
 # fandom-automation
 Хелп тул для редакторов [фандома](https://brainout.fandom.com/ru/wiki/%D0%93%D0%BB%D0%B0%D0%B2%D0%BD%D0%B0%D1%8F_%D1%81%D1%82%D1%80%D0%B0%D0%BD%D0%B8%D1%86%D0%B0)
-- [X] [Exportin wiki](../fandom-automation/Exportin%20wiki) работает 
+- [X] [Exportin wiki](../fandom-automation/Exportin%20wiki/Exportin%20wiki.ipynb) работает 
 - [X] [files_to_string.py](files_to_string.py) работает 
 - [ ] [app.py](app.py) не работает
 
