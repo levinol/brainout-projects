@@ -1,6 +1,7 @@
 from asyncio import events
 import discord
 from discord import activity
+from discord import role
 from discord.embeds import Embed, EmptyEmbed
 from discord.ext import commands
 from discord.flags import PublicUserFlags
@@ -11,7 +12,7 @@ import requests
 from threading import Timer
 import datetime
 
-from config import settings, submission_embed, simplified_embed, suggestion_embed, suggestion_simp_embed, help_embed
+from config import *
 
 client = commands.Bot(command_prefix=settings['prefix'], activity=discord.Activity(type=discord.ActivityType.watching, name='Use '+settings['prefix']+'help if u dumb'))
 token = settings['token']
@@ -89,7 +90,7 @@ async def submit(ctx, *, args, task_type='main', subm_check=1): # submit ком�
     msg = args
     author = ctx.message.author
     
-    if subm_check:
+    if ctx.channel.id == settings['submit_desc_channel']:
         delivery_channel = client.get_channel(submit_id) if task_type == 'main' else client.get_channel(event_id)
     else:
         delivery_channel = client.get_channel(suggest_id) if task_type == 'main' else client.get_channel(server_id)
@@ -112,7 +113,7 @@ async def submit(ctx, *, args, task_type='main', subm_check=1): # submit ком�
         return 0 
 
     
-    await ctx.send(f'{author.mention}, provide the files in necessary format wia .add')
+    await ctx.send(f'{author.mention}, provide the files in necessary format wia .add [message id] [message] [mandatory attachment]')
     
     dispatched_embed = await delivery_channel.send(embed=embed)
 
@@ -307,8 +308,33 @@ async def on_raw_reaction_remove(payload):#Чекер на реакцию, об�
 @client.event
 async def on_message(message):
     await client.process_commands(message)
-    if len(message.mentions) > 0:
-        if message.raw_mentions[0] == 848518443926028288: 
+
+    if message.reference is not None: #Проверяем является ли сообщение реплаем 
+        if message.channel.id in [settings['submit_channel'], settings['submit_final_channel'], settings['suggest_channel'], settings['suggest_server_channel']]: # обрабатываем сообщения в канале sumbit_channel
+            submit_channel = client.get_channel(message.channel.id)
+            
+            #role cheeeeeck
+            roles_ids = []
+            for r in message.author.roles:
+                roles_ids.append(r.id)
+
+            # Govnokod // pls review it later
+            if roles['dev'] in roles_ids:
+                await submit_channel.send("Thanks for the reply dev")
+            elif roles['designers'] in roles_ids:
+                await submit_channel.send("Thanks for the reply game designer")
+            elif roles['admin'] in roles_ids:
+                await submit_channel.send("Thanks for the reply admin")
+            elif roles['moderator'] in roles_ids:
+                await submit_channel.send("Thanks for the reply moderator")
+            elif roles['helper'] in roles_ids:
+                await submit_channel.send("Thanks for the reply helper")
+            else:
+                await submit_channel.send("Thanks for the reply dude")
+                
+
+    elif len(message.mentions) > 0: 
+        if message.raw_mentions[0] == 848518443926028288: #Проверяем является ли сообщение упоминанием бота
             #проверка на сообщение в канале
             if message.channel.id == settings['submit_desc_channel']:
                 await submit_short(message, 'submit')
@@ -319,10 +345,7 @@ async def on_message(message):
             pass
             #await message.channel.send("test")
 
-    if message.channel.id == settings['submit_channel']: # обрабатываем сообщения в канале sumbit_channel
-        submit_channel = client.get_channel(submit_id)
-        if message.reference is not None:
-            await submit_channel.send("Thanks for the reply dude")
+    
 
 
 client.run(token)
