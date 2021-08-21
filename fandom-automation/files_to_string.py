@@ -1,5 +1,5 @@
 import os
-path = r'D:\gitdown\brainout-content\packages\base\smart\Weapons\r8'
+path = r'D:\gitdown\brainout-content\packages\base\smart\Weapons\m3gg'
 
 upgrade_dict = {}
 upgrade_path = ''

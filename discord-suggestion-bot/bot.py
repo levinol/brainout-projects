@@ -36,7 +36,7 @@ async def hello(ctx):
 
 @client.remove_command('help')
 @client.command()
-async def help(ctx, type_help='r'): 
+async def help(ctx, type_help='s'): 
     if ctx.channel.id == settings['submit_desc_channel']:
         if type_help == 'r':
             await ctx.send(embed=subm_embed)
@@ -159,7 +159,6 @@ async def submit_short(message, channel_type): # submit_short команда с�
 
 @client.command()
 async def add(ctx, *, args, task_type='add', subm_check=1): # команда, добавляющая ссылку и текст на отправленный пнг файл
-    submit_channel =client.get_channel(submit_id)
     args_splitted = args.split(' ', 1)
     msg_id = args_splitted[0]
 
@@ -203,6 +202,7 @@ async def add(ctx, *, args, task_type='add', subm_check=1): # команда, д
                     embed.add_field(name="Addendum", value=args_splitted[1], inline = False)
 
         if task_type == 'add':
+            # FIXME 
             try:
                 embed.insert_field_at(index=999, name="Provided png", value=ctx.message.attachments[0].url, inline = False)
                 
@@ -213,6 +213,15 @@ async def add(ctx, *, args, task_type='add', subm_check=1): # команда, д
         await msg.edit(embed=embed)
     else:
         await ctx.send(f'{ctx.message.author.mention}, that\'s not your message 😡')
+
+
+async def add_сomment(comment, mode): # команда, добавляющая комментарий в ембед 
+    submit_channel = client.get_channel(comment.channel.id)
+    msg = await submit_channel.fetch_message(comment.reference.message_id)
+    embed = msg.embeds[0]
+    comment_time = comment.created_at.strftime("%A, %d %b %Y %H:%M") + ' UTC'
+    embed.add_field(name=f"❗{mode} comment - {comment_time}❗", value=comment.content, inline = False)
+    await msg.edit(embed=embed)
 
 @client.command()
 async def remove(ctx, args, task_type='remove', subm_check=1): #команда, удаляющая сообщение или очищающая поля
@@ -320,17 +329,17 @@ async def on_message(message):
 
             # Govnokod // pls review it later
             if roles['dev'] in roles_ids:
-                await submit_channel.send("Thanks for the reply dev")
+                await add_сomment(message,'👨‍💻Dev')
             elif roles['designers'] in roles_ids:
-                await submit_channel.send("Thanks for the reply game designer")
+                await add_сomment(message,'👨‍🎨Designer')
             elif roles['admin'] in roles_ids:
-                await submit_channel.send("Thanks for the reply admin")
+                await add_сomment(message,'🛌Admin')
             elif roles['moderator'] in roles_ids:
-                await submit_channel.send("Thanks for the reply moderator")
+                await add_сomment(message,'👨‍⚖️Mod')
             elif roles['helper'] in roles_ids:
-                await submit_channel.send("Thanks for the reply helper")
+                await add_сomment(message,'🦸‍♂️Helper')
             else:
-                await submit_channel.send("Thanks for the reply dude")
+                await submit_channel.send("Yo, where is your roles")
                 
 
     elif len(message.mentions) > 0: 
