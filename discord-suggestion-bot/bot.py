@@ -1,4 +1,5 @@
 from asyncio import events
+import re
 import discord
 from discord import activity
 from discord import role
@@ -120,7 +121,10 @@ async def submit(ctx, *, args, task_type='main', subm_check=1): # submit ком�
     embed.set_footer(text='Message ID: '+ str(dispatched_embed.id))
     await dispatched_embed.edit(embed=embed)
     await dispatched_embed.add_reaction("👍")
-    await dispatched_embed.add_reaction("👎")        
+    await dispatched_embed.add_reaction("👎")    
+
+    # Удаляем изначальную команду
+    await delete_with_react(ctx.message)    
 
 async def submit_short(message, channel_type): # submit_short команда создающая embed msg, добавляющая message_id и реакции сразу после создания.
     msg = message.content
@@ -156,6 +160,9 @@ async def submit_short(message, channel_type): # submit_short команда с�
     await dispatched_embed.edit(embed=embed)
     await dispatched_embed.add_reaction("👍")
     await dispatched_embed.add_reaction("👎")  
+
+    # Удаляем изначальную команду
+    await delete_with_react(message)  
 
 @client.command()
 async def add(ctx, *, args, task_type='add', subm_check=1): # команда, добавляющая ссылку и текст на отправленный пнг файл
@@ -214,6 +221,8 @@ async def add(ctx, *, args, task_type='add', subm_check=1): # команда, д
     else:
         await ctx.send(f'{ctx.message.author.mention}, that\'s not your message 😡')
 
+    # Удаляем изначальную команду
+    await delete_with_react(ctx.message)  
 
 async def add_сomment(comment, mode): # команда, добавляющая комментарий в ембед 
     submit_channel = client.get_channel(comment.channel.id)
@@ -245,21 +254,49 @@ async def remove(ctx, args, task_type='remove', subm_check=1): #команда, 
             msg = await submit_channel2.fetch_message(args)
         except discord.errors.NotFound:
             subm_flag = 2
-            ctx.send(f'{ctx.message.author.mention}, cant find your msg by id. Fix your brain or smth idk')
+            await ctx.send(f'{ctx.message.author.mention}, cant find your msg by id. Fix your brain or smth idk')
 
     print(ctx.message.author.id, msg.author.id)
 
     if True or ctx.message.author == msg.author:
         embed = msg.embeds[0]
         if task_type == 'clear':
-            embed.clear_fields()
-            await msg.edit(embed=embed)
+            # check if any comment exists
+            embed_dict = embed.to_dict()
+            temp_flag = 0
+            if 'fields' in embed_dict:
+                for field in embed_dict['fields']:
+                    if 'comment' in field['name']:
+                        temp_flag = 1
+
+            if temp_flag:
+                 #role cheeeeeck
+                roles_ids = []
+                for r in ctx.message.author.roles:
+                    roles_ids.append(r.id)
+
+                # Govnokod // pls review it later
+                # FIXME
+                if roles['dev'] in roles_ids or roles['designers'] in roles_ids or roles['admin'] in roles_ids or roles['moderator'] in roles_ids or roles['helper'] in roles_ids:
+                    embed.clear_fields()
+                    await msg.edit(embed=embed)
+                else:
+                    await ctx.send(f"{ctx.message.author.mention}, the message contains someone else's comment, I cannot clear it")
+            else:
+                embed.clear_fields()
+                await msg.edit(embed=embed)
+
         else:
             await msg.delete(delay=5)
     else:
         await ctx.send(f'{ctx.message.author.mention}, that\'s not your message 😡')
+    
+    # Удаляем изначальную команду
+    await delete_with_react(ctx.message)  
 
-
+async def delete_with_react(msg):
+    await msg.add_reaction("🚮")
+    await msg.delete(delay=7)
 
 #Embeded color thingi
 @client.event
@@ -328,6 +365,7 @@ async def on_message(message):
                 roles_ids.append(r.id)
 
             # Govnokod // pls review it later
+            # FIXME
             if roles['dev'] in roles_ids:
                 await add_сomment(message,'👨‍💻Dev')
             elif roles['designers'] in roles_ids:
@@ -340,6 +378,9 @@ async def on_message(message):
                 await add_сomment(message,'🦸‍♂️Helper')
             else:
                 await submit_channel.send("Yo, where is your roles")
+            
+            # удаляем реплаи!
+            await message.delete()
                 
 
     elif len(message.mentions) > 0: 
