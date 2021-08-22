@@ -33,7 +33,7 @@ async def hello(ctx):
     author = ctx.message.author 
     print(author, type(author))
 
-    await ctx.send(f'Hello, {author.mention}!') 
+    await ctx.send(f'Hello, {author.mention}!')
 
 @client.remove_command('help')
 @client.command()
@@ -110,11 +110,12 @@ async def submit(ctx, *, args, task_type='main', subm_check=1): # submit ком�
         embed.set_image(url=ctx.message.attachments[0].url)
         
     except IndexError:
-        await ctx.send(f'{author.mention}, what about image?')
+        bot_respond = await ctx.send(f'{author.mention}, what about image?')
+        await delete_with_react(bot_respond)
         return 0 
 
-    
-    await ctx.send(f'{author.mention}, provide the files in necessary format wia .add [message id] [message] [mandatory attachment]')
+    bot_respond = await ctx.send(f'{author.mention}, provide the files in necessary format wia .add [message id] [message] [mandatory attachment]')
+    await delete_with_react(bot_respond)
     
     dispatched_embed = await delivery_channel.send(embed=embed)
 
@@ -151,9 +152,9 @@ async def submit_short(message, channel_type): # submit_short команда с�
             await cur_channel.send(f'{author.mention}, what about image?')
             return 0 
 
-    
-    await cur_channel.send(f'{author.mention}, provide the files in necessary format wia .add')
-    
+    bot_respond = await cur_channel.send(f'{author.mention}, provide the files in necessary format wia .add [message id] [message] [mandatory attachment]')
+    await delete_with_react(bot_respond)
+
     dispatched_embed = await delivery_channel.send(embed=embed)
 
     embed.set_footer(text='Message ID: '+ str(dispatched_embed.id))
@@ -188,7 +189,9 @@ async def add(ctx, *, args, task_type='add', subm_check=1): # команда, д
             msg = await submit_channel2.fetch_message(msg_id)
         except discord.errors.NotFound:
             subm_flag = 2
-            ctx.send(f'{ctx.message.author.mention}, cant find your msg by id. Fix your brain or smth idk')
+            bot_respond = await ctx.send(f'{ctx.message.author.mention}, cant find your msg by id.')
+            await delete_with_react(bot_respond)
+            return 0
 
     if True or ctx.message.author == msg.author:
         #gettin msg
@@ -214,7 +217,8 @@ async def add(ctx, *, args, task_type='add', subm_check=1): # команда, д
                 embed.insert_field_at(index=999, name="Provided png", value=ctx.message.attachments[0].url, inline = False)
                 
             except IndexError:
-                await ctx.send(f'{ctx.message.author.mention}, what about image?')
+                bot_respond = await ctx.send(f'{ctx.message.author.mention}, what about image?')
+                await delete_with_react(bot_respond)
                 return 0
 
         await msg.edit(embed=embed)
@@ -254,7 +258,9 @@ async def remove(ctx, args, task_type='remove', subm_check=1): #команда, 
             msg = await submit_channel2.fetch_message(args)
         except discord.errors.NotFound:
             subm_flag = 2
-            await ctx.send(f'{ctx.message.author.mention}, cant find your msg by id. Fix your brain or smth idk')
+            bot_respond = await ctx.send(f'{ctx.message.author.mention}, cant find your msg by id.')
+            await delete_with_react(bot_respond)
+            return 0
 
     print(ctx.message.author.id, msg.author.id)
 
@@ -275,13 +281,12 @@ async def remove(ctx, args, task_type='remove', subm_check=1): #команда, 
                 for r in ctx.message.author.roles:
                     roles_ids.append(r.id)
 
-                # Govnokod // pls review it later
-                # FIXME
-                if roles['dev'] in roles_ids or roles['designers'] in roles_ids or roles['admin'] in roles_ids or roles['moderator'] in roles_ids or roles['helper'] in roles_ids:
+                if set(roles.values()).intersection(set(roles_ids)):
                     embed.clear_fields()
                     await msg.edit(embed=embed)
                 else:
-                    await ctx.send(f"{ctx.message.author.mention}, the message contains someone else's comment, I cannot clear it")
+                    bot_respond = await ctx.send(f"{ctx.message.author.mention}, the message contains someone else's comment, I cannot clear it")
+                    await delete_with_react(bot_respond) 
             else:
                 embed.clear_fields()
                 await msg.edit(embed=embed)
@@ -299,34 +304,8 @@ async def delete_with_react(msg):
     await msg.delete(delay=7)
 
 #Embeded color thingi
-@client.event
-async def on_raw_reaction_add(payload): #Чекеры на реакцию, обновляющие цвет embed'a
-    if payload.channel_id in embed_channels:
-        react_channel =client.get_channel(payload.channel_id)
-        msg = await react_channel.fetch_message(payload.message_id)
-        react1 = get(msg.reactions, emoji="👍")
-        react2 = get(msg.reactions, emoji="👎")
-        embed = msg.embeds[0]
 
-        react1 = react1.count
-        react2 = react2.count
-
-
-        if react1 > 50 and react2 < 20:
-            embed.colour = 0x3CB371
-        elif react2 >20:
-            embed.colour = 0xFF0000
-        elif react1 > react2:
-            embed.colour = 0x228B22
-        elif react1 == react2:
-            embed.colour = 0xFFFFFF 
-        else:
-            embed.colour = 0xFF8C00
-
-        await msg.edit(embed=embed)
-
-@client.event
-async def on_raw_reaction_remove(payload):#Чекер на реакцию, обновляющие цвет embed'a. Вообще говнокод, но я не люблю писать декораторы 
+async def reaction_count(payload):
     if payload.channel_id in embed_channels:
         submit_channel =client.get_channel(payload.channel_id)
         msg = await submit_channel.fetch_message(payload.message_id)
@@ -339,8 +318,8 @@ async def on_raw_reaction_remove(payload):#Чекер на реакцию, об�
 
 
         if react1 > 50 and react2 < 20:
-            embed.colour =  0x3CB371
-        elif react2 >20:
+            embed.colour = 0x3CB371
+        elif react2 > 20:
             embed.colour = 0xFF0000
         elif react1 > react2:
             embed.colour = 0x228B22
@@ -350,6 +329,14 @@ async def on_raw_reaction_remove(payload):#Чекер на реакцию, об�
             embed.colour = 0xFF8C00
 
         await msg.edit(embed=embed)
+
+@client.event
+async def on_raw_reaction_add(payload): #Чекеры на реакцию, обновляющие цвет embed'a
+    await reaction_count(payload)
+
+@client.event
+async def on_raw_reaction_remove(payload):#Чекер на реакцию, обновляющие цвет embed'a. Вообще говнокод, но я не люблю писать декораторы 
+    await reaction_count(payload)
 
 @client.event
 async def on_message(message):
