@@ -8,6 +8,11 @@ from discord.ext import commands
 from discord.flags import PublicUserFlags
 from discord.utils import get
 
+from discord_slash import SlashCommand, SlashContext
+from discord_slash.utils.manage_commands import create_choice, create_option
+from discord_slash.utils.manage_commands import create_permission
+from discord_slash.model import SlashCommandPermissionType
+
 import json
 import requests
 from threading import Timer
@@ -15,7 +20,10 @@ import datetime
 
 from config import *
 
-client = commands.Bot(command_prefix=settings['prefix'], activity=discord.Activity(type=discord.ActivityType.watching, name='Use '+settings['prefix']+'help if u dumb'))
+client = commands.Bot(command_prefix='/', activity=discord.Activity(type=discord.ActivityType.watching, name='Use '+settings['prefix']+'help if u dumb'))
+slash = SlashCommand(client, sync_commands=True)
+
+
 token = settings['token']
 submit_id = settings['submit_channel']
 suggest_id = settings['suggest_channel']
@@ -27,13 +35,6 @@ simp_embed = Embed.from_dict(simplified_embed)
 sugst_embed = Embed.from_dict(suggestion_embed)
 sugst_simp_embed = Embed.from_dict(suggestion_simp_embed)
 help_emb = Embed.from_dict(help_embed)
-
-@client.command() # Моя первая команда
-async def hello(ctx): 
-    author = ctx.message.author 
-    print(author, type(author))
-
-    await ctx.send(f'Hello, {author.mention}!')
 
 @client.remove_command('help')
 @client.command()
@@ -52,182 +53,6 @@ async def help(ctx, type_help='s'):
         await ctx.send(embed=help_emb)
 
 
-
-
-@client.command()
-async def submission(ctx, task_type, *, args):
-    print(task_type, args)
-    if ctx.channel.id == settings['submit_desc_channel']:
-        if task_type == 'main' or task_type == 'event':
-            await submit(ctx, args=args, task_type=task_type, subm_check=1)
-        elif task_type == 'add' or task_type == 'addendum':
-            await add(ctx, args=args, task_type=task_type, subm_check=1)
-        elif task_type == 'remove' or  task_type == 'clear':
-            await remove(ctx, args=args, task_type=task_type, subm_check=1)
-        else:
-            await ctx.send(embed=subm_embed)
-    else:
-        await ctx.send(embed=subm_embed)
-
-@client.command()
-async def suggestion(ctx, task_type, *, args):
-    print(task_type, args)
-    if ctx.channel.id == settings['suggest_desc_channel']:
-        if task_type == 'main' or task_type == 'server':
-            await submit(ctx, args=args, task_type=task_type, subm_check=0)
-        elif task_type == 'add' or task_type == 'addendum':
-            await add(ctx, args=args, task_type=task_type, subm_check=0)
-        elif task_type == 'remove' or  task_type == 'clear':
-            await remove(ctx, args=args, task_type=task_type, subm_check=0)
-        else:
-            await ctx.send(embed=sugst_embed)
-    else:
-        await ctx.send(embed=sugst_embed)
-
-
-@client.command()
-async def submit(ctx, *, args, task_type='main', subm_check=1): # submit команда создающая embed msg, добавляющая message_id и реакции сразу после создания.
-    print(args)
-    msg = args
-    author = ctx.message.author
-    
-    if ctx.channel.id == settings['submit_desc_channel']:
-        delivery_channel = client.get_channel(submit_id) if task_type == 'main' else client.get_channel(event_id)
-    else:
-        delivery_channel = client.get_channel(suggest_id) if task_type == 'main' else client.get_channel(server_id)
-
-    #Разделяем на title и desc
-    if msg.find('d=')!=-1:
-        msg_title = msg[:msg.find('d=')]
-        msg_desc = msg[msg.find('d=')+2:]
-    else:
-        msg_title = msg
-        msg_desc = discord.Embed.Empty 
-
-    embed=discord.Embed(title=msg_title, description=msg_desc, color=0xFFFFFF, timestamp=datetime.datetime.utcnow())
-    embed.set_author(name=author.display_name, icon_url=author.avatar_url)
-    try:
-        embed.set_image(url=ctx.message.attachments[0].url)
-        
-    except IndexError:
-        bot_respond = await ctx.send(f'{author.mention}, what about image?')
-        await delete_with_react(bot_respond)
-        return 0 
-
-    bot_respond = await ctx.send(f'{author.mention}, provide the files in necessary format wia .add [message id] [message] [mandatory attachment]')
-    await delete_with_react(bot_respond)
-    
-    dispatched_embed = await delivery_channel.send(embed=embed)
-
-    embed.set_footer(text='Message ID: '+ str(dispatched_embed.id))
-    await dispatched_embed.edit(embed=embed)
-    await dispatched_embed.add_reaction("👍")
-    await dispatched_embed.add_reaction("👎")    
-
-    # Удаляем изначальную команду
-    await delete_with_react(ctx.message)    
-
-async def submit_short(message, channel_type): # submit_short команда создающая embed msg, добавляющая message_id и реакции сразу после создания.
-    msg = message.content
-    author = message.author
-    print(msg)
-    cur_channel = message.channel
-    delivery_channel = client.get_channel(submit_id) if channel_type == 'submit' else client.get_channel(suggest_id)
-
-    #Разделяем на title и desc
-    if msg.find('d=')!=-1:
-        msg_title = msg[msg.find('>') + 1:msg.find('d=')]
-        msg_desc = msg[msg.find('d=')+2:]
-    else:
-        msg_title = msg[msg.find('>') + 1:]
-        msg_desc = discord.Embed.Empty 
-
-    embed=discord.Embed(title=msg_title, description=msg_desc, color=0xFFFFFF, timestamp=datetime.datetime.utcnow())
-    embed.set_author(name=author.display_name, icon_url=author.avatar_url)
-    try:
-        embed.set_image(url=message.attachments[0].url)
-        
-    except IndexError:
-        if channel_type == 'submit':
-            await cur_channel.send(f'{author.mention}, what about image?')
-            return 0 
-
-    bot_respond = await cur_channel.send(f'{author.mention}, provide the files in necessary format wia .add [message id] [message] [mandatory attachment]')
-    await delete_with_react(bot_respond)
-
-    dispatched_embed = await delivery_channel.send(embed=embed)
-
-    embed.set_footer(text='Message ID: '+ str(dispatched_embed.id))
-    await dispatched_embed.edit(embed=embed)
-    await dispatched_embed.add_reaction("👍")
-    await dispatched_embed.add_reaction("👎")  
-
-    # Удаляем изначальную команду
-    await delete_with_react(message)  
-
-@client.command()
-async def add(ctx, *, args, task_type='add', subm_check=1): # команда, добавляющая ссылку и текст на отправленный пнг файл
-    args_splitted = args.split(' ', 1)
-    msg_id = args_splitted[0]
-
-    if subm_check:
-        submit_channel = client.get_channel(submit_id)
-        submit_channel2 = client.get_channel(event_id)
-    else:
-        submit_channel = client.get_channel(suggest_id) 
-        submit_channel2 = client.get_channel(server_id)
-
-    subm_flag = 0
-
-    try:
-        msg = await submit_channel.fetch_message(msg_id)
-    except discord.errors.NotFound:
-        subm_flag = 1
-    
-    if subm_flag:
-        try:
-            msg = await submit_channel2.fetch_message(msg_id)
-        except discord.errors.NotFound:
-            subm_flag = 2
-            bot_respond = await ctx.send(f'{ctx.message.author.mention}, cant find your msg by id.')
-            await delete_with_react(bot_respond)
-            return 0
-
-    if True or ctx.message.author == msg.author:
-        #gettin msg
-        embed = msg.embeds[0]
-        if len(args_splitted) > 1:
-            if len(args_splitted[1])>1 and not args_splitted[1].isspace(): # чекер на одно дополнение к сообщению
-                embed_dict = embed.to_dict()
-                temp_flag = 0
-                if 'fields' in embed_dict:
-                    for field in embed_dict['fields']:
-                        if field['name'] == "Addendum":
-                            temp_flag = 1
-                            field['value'] = args_splitted[1]
-
-                if temp_flag:
-                    embed = Embed.from_dict(embed_dict)
-                else:
-                    embed.add_field(name="Addendum", value=args_splitted[1], inline = False)
-
-        if task_type == 'add':
-            # FIXME 
-            try:
-                embed.insert_field_at(index=999, name="Provided png", value=ctx.message.attachments[0].url, inline = False)
-                
-            except IndexError:
-                bot_respond = await ctx.send(f'{ctx.message.author.mention}, what about image?')
-                await delete_with_react(bot_respond)
-                return 0
-
-        await msg.edit(embed=embed)
-    else:
-        await ctx.send(f'{ctx.message.author.mention}, that\'s not your message 😡')
-
-    # Удаляем изначальную команду
-    await delete_with_react(ctx.message)  
-
 async def add_сomment(comment, mode): # команда, добавляющая комментарий в ембед 
     submit_channel = client.get_channel(comment.channel.id)
     msg = await submit_channel.fetch_message(comment.reference.message_id)
@@ -236,68 +61,6 @@ async def add_сomment(comment, mode): # команда, добавляющая 
     embed.add_field(name=f"❗{mode} comment - {comment_time}❗", value=comment.content, inline = False)
     await msg.edit(embed=embed)
 
-@client.command()
-async def remove(ctx, args, task_type='remove', subm_check=1): #команда, удаляющая сообщение или очищающая поля
-
-    if subm_check:
-        submit_channel = client.get_channel(submit_id)
-        submit_channel2 = client.get_channel(event_id)
-    else:
-        submit_channel = client.get_channel(suggest_id) 
-        submit_channel2 = client.get_channel(server_id)
-
-    subm_flag = 0
-
-    try:
-        msg = await submit_channel.fetch_message(args)
-    except discord.errors.NotFound:
-        subm_flag = 1
-    
-    if subm_flag:
-        try:
-            msg = await submit_channel2.fetch_message(args)
-        except discord.errors.NotFound:
-            subm_flag = 2
-            bot_respond = await ctx.send(f'{ctx.message.author.mention}, cant find your msg by id.')
-            await delete_with_react(bot_respond)
-            return 0
-
-    print(ctx.message.author.id, msg.author.id)
-
-    if True or ctx.message.author == msg.author:
-        embed = msg.embeds[0]
-        if task_type == 'clear':
-            # check if any comment exists
-            embed_dict = embed.to_dict()
-            temp_flag = 0
-            if 'fields' in embed_dict:
-                for field in embed_dict['fields']:
-                    if 'comment' in field['name']:
-                        temp_flag = 1
-
-            if temp_flag:
-                 #role cheeeeeck
-                roles_ids = []
-                for r in ctx.message.author.roles:
-                    roles_ids.append(r.id)
-
-                if set(roles.values()).intersection(set(roles_ids)):
-                    embed.clear_fields()
-                    await msg.edit(embed=embed)
-                else:
-                    bot_respond = await ctx.send(f"{ctx.message.author.mention}, the message contains someone else's comment, I cannot clear it")
-                    await delete_with_react(bot_respond) 
-            else:
-                embed.clear_fields()
-                await msg.edit(embed=embed)
-
-        else:
-            await msg.delete(delay=5)
-    else:
-        await ctx.send(f'{ctx.message.author.mention}, that\'s not your message 😡')
-    
-    # Удаляем изначальную команду
-    await delete_with_react(ctx.message)  
 
 async def delete_with_react(msg):
     await msg.add_reaction("🚮")
@@ -368,21 +131,620 @@ async def on_message(message):
             
             # удаляем реплаи!
             await message.delete()
-                
 
-    elif len(message.mentions) > 0: 
-        if message.raw_mentions[0] == 848518443926028288: #Проверяем является ли сообщение упоминанием бота
-            #проверка на сообщение в канале
-            if message.channel.id == settings['submit_desc_channel']:
-                await submit_short(message, 'submit')
-            elif  message.channel.id == settings['suggest_desc_channel']:
-                await submit_short(message, 'suggest')
+
+
+# NEW ERA of SLASH COMMANDS
+from discord_slash import SlashCommand, SlashContext
+from discord_slash.utils.manage_commands import create_choice, create_option
+
+async def send_embed_with_file(ctx, args, channel_id, sep_1, sep_2, image_req):
+    author = ctx.message.author
+    arg_partition = args.partition(sep_2)
+    if arg_partition[0]!= '':
+        msg_desc = arg_partition[2]
+        msg_title = arg_partition[0].partition(sep_1)[2]
+    else:
+        msg_desc = arg_partition[2].partition(sep_1)[0]
+        msg_title = arg_partition[2].partition(sep_1)[2]
+
+    if msg_desc == '': msg_desc = discord.Embed.Empty
+
+    await create_embed_with_reactions(ctx, msg_title, msg_desc, channel_id, image_req)    
+
+    # Удаляем изначальную команду
+    await delete_with_react(ctx.message)
+
+async def add_file_to_embed(ctx, args, sep_1, sep_2, channel_flag=None):
+    arg_partition = args.partition(sep_2)
+    if arg_partition[0]!= '':
+        message = arg_partition[2]
+        message_id = arg_partition[0].partition(sep_1)[2]
+    else:
+        message = arg_partition[2].partition(sep_1)[0]
+        message_id = arg_partition[2].partition(sep_1)[2]
+    
+    # ищем мессаге
+    msg =  await msg_fetch(ctx, message_id, channel_flag)
+
+    if msg == 0:
+        return 0
+
+    if True or ctx.author == msg.author:
+        #gettin msg
+        embed = msg.embeds[0]
+        if message: # Проверка на существование поля с комментарием и обновление/добавление его
+            embed_dict = embed.to_dict()
+            temp_flag = 0
+            if 'fields' in embed_dict:
+                for field in embed_dict['fields']:
+                    if field['name'] == "Addendum":
+                        temp_flag = 1
+                        field['value'] = message
+
+            if temp_flag:
+                embed = Embed.from_dict(embed_dict)
             else:
-                await message.channel.send('aww you mention me')
-            pass
-            #await message.channel.send("test")
+                embed.add_field(name="Addendum", value=message, inline = False)
 
+        # FIXME 
+        try:
+            embed.insert_field_at(index=999, name="Provided file", value=ctx.message.attachments[0].url, inline = False)
+            
+            
+        except:
+            bot_respond = await ctx.send(f'{ctx.author.mention}, what about image?')
+            await delete_with_react(bot_respond)
+            return 0
+
+        await msg.edit(embed=embed)
+
+    else:
+        await ctx.send(f'{ctx.message.author.mention}, that\'s not your message 😡')
+
+    # Удаляем изначальную команду
+    await delete_with_react(ctx.message)   
+
+async def add_text_to_embed(ctx, message, message_id, channel_flag=None):
+    # ищем мессаге
+    msg =  await msg_fetch_slash(ctx, message_id, channel_flag)
+
+    if msg == 0:
+        return 0
+
+    if True or ctx.author == msg.author:
+        #gettin msg
+        embed = msg.embeds[0]
+        if message: # Проверка на существование поля с комментарием и обновление/добавление его
+            embed_dict = embed.to_dict()
+            temp_flag = 0
+            if 'fields' in embed_dict:
+                for field in embed_dict['fields']:
+                    if field['name'] == "Addendum":
+                        temp_flag = 1
+                        field['value'] = message
+
+            if temp_flag:
+                embed = Embed.from_dict(embed_dict)
+                
+            else:
+                embed.add_field(name="Addendum", value=message, inline = False)
+
+        # FIXME 
+        try:
+            embed.insert_field_at(index=999, name="Provided file", value=ctx.message.attachments[0].url, inline = False)
+            await ctx.send('File was provided' ,hidden=True)
+            
+        except:
+            # TODO check if slash commands now can work with file attachments
+            pass
+
+        await msg.edit(embed=embed)
+        await ctx.send('Addendum was replaced', hidden=True) if temp_flag else await ctx.send('Addendum was added', hidden=True)
+    else:
+        await ctx.send(f'{ctx.message.author.mention}, that\'s not your message 😡')
+  
+
+async def msg_fetch(ctx, message_id, channel_flag):
+    # ищем мессаге
+    first_channel = client.get_channel(submit_id) if channel_flag == "submission" else client.get_channel(suggest_id)
+    second_channel = client.get_channel(event_id) if channel_flag == "submission" else client.get_channel(server_id)
+
+    flag = 0
+
+    try:
+        msg = await first_channel.fetch_message(message_id)
+    except discord.errors.NotFound:
+        flag = 1
+    
+    if flag:
+        try:
+            msg = await second_channel.fetch_message(message_id)
+        except discord.errors.NotFound:
+            bot_respond = await ctx.send(f'{ctx.message.author.mention}, cant find your msg by id.')
+            await delete_with_react(bot_respond)
+            return 0  
+    return msg
+
+async def msg_fetch_slash(ctx, message_id, channel_flag):
+    # ищем мессаге
+    first_channel = client.get_channel(submit_id) if channel_flag == "submission" else client.get_channel(suggest_id)
+    second_channel = client.get_channel(event_id) if channel_flag == "submission" else client.get_channel(server_id)
+
+    flag = 0
+
+    try:
+        msg = await first_channel.fetch_message(message_id)
+    except discord.errors.NotFound:
+        flag = 1
+    
+    if flag:
+        try:
+            msg = await second_channel.fetch_message(message_id)
+        except discord.errors.NotFound:
+            bot_respond = await ctx.send(f'{ctx.author.mention}, cant find your msg by id.', hidden=True)
+            return 0  
+    return msg
+
+async def create_embed_with_reactions(ctx, msg_title, msg_desc,channel_id, image_req: bool ) -> None:
+    author = ctx.author
+
+    embed=discord.Embed(title=msg_title, description=msg_desc, color=0xFFFFFF, timestamp=datetime.datetime.utcnow())
+    embed.set_author(name=author.display_name, icon_url=author.avatar_url)
+
+    #Image check
+    try:
+        embed.set_image(url=ctx.message.attachments[0].url)
+    except:
+        if image_req:
+            bot_respond = await ctx.send(f'{author.mention}, what about image?')
+            await delete_with_react(bot_respond)
+            return 0
+        else:
+            pass
+    
+    delivery_channel = client.get_channel(channel_id)
+    dispatched_embed = await delivery_channel.send(embed=embed)
+
+    embed.set_footer(text='Message ID: '+ str(dispatched_embed.id))
+    await dispatched_embed.edit(embed=embed)
+    await dispatched_embed.add_reaction("👍")
+    await dispatched_embed.add_reaction("👎")
+
+async def clear_embed(ctx, message_id, channel_flag):
+
+    msg =  await msg_fetch(ctx, message_id, channel_flag)
+    if msg == 0:
+        return 0
+
+
+    if True or ctx.message.author == msg.author:
+        embed = msg.embeds[0]
+        # check if any comment exists
+        embed_dict = embed.to_dict()
+        temp_flag = 0
+        if 'fields' in embed_dict:
+            for field in embed_dict['fields']:
+                if 'comment' in field['name']:
+                    temp_flag = 1
+
+        if temp_flag:
+                #role cheeeeeck
+            roles_ids = []
+            for r in ctx.message.author.roles:
+                roles_ids.append(r.id)
+
+            if set(roles.values()).intersection(set(roles_ids)):
+                embed.clear_fields()
+                await msg.edit(embed=embed)
+            else:
+                await ctx.send(f"{ctx.message.author.mention}, the message contains someone else's comment, I cannot clear it", hidden=True)
+        else:
+            embed.clear_fields()
+            await msg.edit(embed=embed)
+            await ctx.send('Fields cleared', hidden=True)
+
+    else:
+        await ctx.send(f'{ctx.message.author.mention}, that\'s not your message 😡')
+
+@slash.slash(
+    name="hello",
+    description="Say hello to botti",
+    guild_ids=[873835757238894592]
+)
+async def _hello(ctx:SlashContext): 
+    await ctx.send(f'Hello, {ctx.author.mention}!', hidden=True)
     
 
+# submission part
+@slash.subcommand(
+    base="submission",
+    name="main", 
+    description="Make a submission in main channel", 
+    guild_ids=[873835757238894592],
+    options=[
+        create_option(
+            name="artwork_name",
+            description="Pls name it Hell",
+            option_type=3,
+            required=True
+        ),
+        create_option(
+            name="description",
+            description="Optional description of your work",
+            option_type=3,
+            required=False
+        )
+    ]
+    )
+async def _submission_main(ctx, artwork_name, description=None):
+    author = ctx.author
+    
+    #Разделяем на title и desc
+    if description:
+        msg_title = artwork_name
+        msg_desc = description
+    else:
+        msg_title = artwork_name
+        msg_desc = discord.Embed.Empty 
+
+    await create_embed_with_reactions(ctx, msg_title, msg_desc, submit_id, image_req=True)
+
+    await ctx.send(f'{author.mention}, provide the files in necessary format wia add command', hidden=True)  
+
+# _submission_main command with attached image
+# _submission_add command with attached image
+@client.command()
+async def submission(ctx, *, args): # submit команда создающая embed msg, добавляющая message_id и реакции сразу после создания.
+    command_type, args=args.split(' ',1)
+    print(command_type, args)
+    msg = args
+    author = ctx.message.author
+    if command_type == 'main':
+        await send_embed_with_file(ctx, args, submit_id, "artwork_name:", "description:", image_req=True)
+    elif command_type == 'add':
+        await add_file_to_embed(ctx, args, "message_id:", "message:", channel_flag="submission")    
+    else:
+        await ctx.send('uhh im stuck')
+
+""" @slash.subcommand(
+    base="submission",
+    name="event",
+    description="Make a submission in event channel", 
+    guild_ids=[873835757238894592],
+    options=[
+        create_option(
+            name="artwork_name",
+            description="Pls name it Hell",
+            option_type=3,
+            required=True
+        ),
+        create_option(
+            name="description",
+            description="Optional description of your work",
+            option_type=3,
+            required=False
+        )
+    ]
+    )
+async def _submission_event(ctx, artwork_name, description=None):
+    
+    author = ctx.author
+    
+    #Разделяем на title и desc
+    if description:
+        msg_title = artwork_name
+        msg_desc = description
+    else:
+        msg_title = artwork_name
+        msg_desc = discord.Embed.Empty 
+
+    await create_embed_with_reactions(ctx, msg_title, msg_desc, submit_id, image_req=True)
+
+    await ctx.send(f'{author.mention}, provide the files in necessary format wia add command', hidden=True)   """
+
+@slash.subcommand(
+    base="submission",
+    name="add",
+    description="Add an attachment to a submission", 
+    guild_ids=[873835757238894592],
+    options=[
+        create_option(
+            name="message_id",
+            description="Copy message id from submission",
+            option_type=3,
+            required=True
+        ),
+        create_option(
+            name="message",
+            description="Message for addendum field",
+            option_type=3,
+            required=False
+        )
+    ]
+    )
+async def _submission_add(ctx, message_id, message=None):
+    await add_text_to_embed(ctx, message, message_id, channel_flag="submission")
+
+@slash.subcommand(
+    base="submission",
+    name="addendum",
+    description="Add an addendum to a submission", 
+    guild_ids=[873835757238894592],
+    options=[
+        create_option(
+            name="message_id",
+            description="Copy message id from submission",
+            option_type=3,
+            required=True
+        ),
+        create_option(
+            name="message",
+            description="Message",
+            option_type=3,
+            required=True
+        )
+    ]
+    )
+async def _submission_addendum(ctx, message_id, message):
+    await add_text_to_embed(ctx, message, message_id, channel_flag="submission")
+
+@slash.subcommand(
+    base="submission",
+    name="сlear",
+    description="Clear all optional description fields", 
+    guild_ids=[873835757238894592],
+    options=[
+        create_option(
+            name="message_id",
+            description="Copy message id from submission",
+            option_type=3,
+            required=True
+        )
+    ]
+    )
+async def _submission_clear(ctx, message_id):
+    await clear_embed(ctx, message_id, "submission")
+    # msg =  await msg_fetch(ctx, message_id, "submission")
+    # if msg == 0:
+    #     return 0
+
+
+    # if True or ctx.message.author == msg.author:
+    #     embed = msg.embeds[0]
+    #     # check if any comment exists
+    #     embed_dict = embed.to_dict()
+    #     temp_flag = 0
+    #     if 'fields' in embed_dict:
+    #         for field in embed_dict['fields']:
+    #             if 'comment' in field['name']:
+    #                 temp_flag = 1
+
+    #     if temp_flag:
+    #             #role cheeeeeck
+    #         roles_ids = []
+    #         for r in ctx.message.author.roles:
+    #             roles_ids.append(r.id)
+
+    #         if set(roles.values()).intersection(set(roles_ids)):
+    #             embed.clear_fields()
+    #             await msg.edit(embed=embed)
+    #         else:
+    #             bot_respond = await ctx.send(f"{ctx.message.author.mention}, the message contains someone else's comment, I cannot clear it")
+    #             await delete_with_react(bot_respond) 
+    #     else:
+    #         embed.clear_fields()
+    #         await msg.edit(embed=embed)
+    #         await ctx.send('Fields cleared', hidden=True)
+
+    # else:
+    #     await ctx.send(f'{ctx.message.author.mention}, that\'s not your message 😡')
+
+
+@slash.subcommand(
+    base="submission",
+    name="remove",
+    description="Remove a submission", 
+    guild_ids=[873835757238894592],
+    options=[
+        create_option(
+            name="message_id",
+            description="Copy message id from submission",
+            option_type=3,
+            required=True
+        )
+    ]
+    )
+async def _submission_remove(ctx, message_id):
+
+    msg =  await msg_fetch(ctx, message_id, "submission")
+    if msg == 0:
+        return 0
+
+
+    if True or ctx.message.author == msg.author:
+        await msg.delete(delay=5)
+        await ctx.send('Message deleted', hidden=True)
+    else:
+        await ctx.send(f'{ctx.message.author.mention}, that\'s not your message 😡')
+
+# suggestion part
+@slash.subcommand(
+    base="suggestion",
+    name="main", 
+    description="Make a suggestion in main channel", 
+    guild_ids=[873835757238894592],
+    options=[
+        create_option(
+            name="suggestion_topic",
+            description="Pls name it Hell",
+            option_type=3,
+            required=True
+        ),
+        create_option(
+            name="description",
+            description="Description of your work",
+            option_type=3,
+            required=True
+        )
+    ]
+    )
+async def _suggestion_main(ctx, suggestion_topic, description=None):
+    
+    author = ctx.author
+    
+    #Разделяем на title и desc
+    if description:
+        msg_title = suggestion_topic
+        msg_desc = description
+    else:
+        msg_title = suggestion_topic
+        msg_desc = discord.Embed.Empty 
+    
+    await create_embed_with_reactions(ctx, msg_title, msg_desc, suggest_id , image_req=False)
+
+    await ctx.send(f'{author.mention}, provide the files in necessary format wia add command', hidden=True)
+
+# _suggestion_main command with attached image
+@client.command()
+async def suggestion(ctx, *, args): # suggest команда создающая embed msg, добавляющая message_id и реакции сразу после создания.
+    command_type, args=args.split(' ',1)
+    print(command_type, args)
+    msg = args
+    author = ctx.message.author
+    if command_type == 'main':
+        await send_embed_with_file(ctx, args, suggest_id, "suggestion_topic:", "description:", image_req=False) 
+    elif command_type == 'server':
+        await send_embed_with_file(ctx, args, server_id,"artwork_name:",  "description:", image_req=False)
+    elif command_type == 'add':
+        await add_file_to_embed(ctx, args, "message_id:", "message:", channel_flag="suggestion")
+    else:
+        await ctx.send('uhh im stuck')
+
+@slash.subcommand(
+    base="suggestion",
+    name="server",
+    description="Make a suggestion in event channel", 
+    guild_ids=[873835757238894592],
+    options=[
+        create_option(
+            name="artwork_name",
+            description="Pls name it Hell",
+            option_type=3,
+            required=True
+        ),
+        create_option(
+            name="description",
+            description="Optional description of your work",
+            option_type=3,
+            required=True
+        )
+    ]
+    )
+async def _suggestion_server(ctx, artwork_name, description=None):
+    author = ctx.author
+    
+    #Разделяем на title и desc
+    if description:
+        msg_title = artwork_name
+        msg_desc = description
+    else:
+        msg_title = artwork_name
+        msg_desc = discord.Embed.Empty 
+
+    await create_embed_with_reactions(ctx, msg_title, msg_desc, server_id , image_req=False)
+
+    await ctx.send(f'{author.mention}, provide the files in necessary format wia add command', hidden=True)
+
+
+@slash.subcommand(
+    base="suggestion",
+    name="add",
+    description="Add an attachment to a suggestion", 
+    guild_ids=[873835757238894592],
+    options=[
+        create_option(
+            name="message_id",
+            description="Copy message id from suggestion",
+            option_type=3,
+            required=True
+        ),
+        create_option(
+            name="message",
+            description="Message",
+            option_type=3,
+            required=True
+        )
+    ]
+    )
+async def _suggestion_add(ctx, message_id, message):
+    await add_text_to_embed(ctx, message, message_id, channel_flag="suggestion")
+
+@slash.subcommand(
+    base="suggestion",
+    name="addendum",
+    description="Add an addendum to a suggestion", 
+    guild_ids=[873835757238894592],
+    options=[
+        create_option(
+            name="message_id",
+            description="Copy message id from suggestion",
+            option_type=3,
+            required=True
+        ),
+        create_option(
+            name="message",
+            description="Message",
+            option_type=3,
+            required=True
+        )
+    ]
+    )
+async def _suggestion_addendum(ctx, message_id, message):
+    await add_text_to_embed(ctx, message, message_id, channel_flag="suggestion")
+
+@slash.subcommand(
+    base="suggestion",
+    name="сlear",
+    description="Clear all optional description fields", 
+    guild_ids=[873835757238894592],
+    options=[
+        create_option(
+            name="message_id",
+            description="Copy message id from suggestion",
+            option_type=3,
+            required=True
+        )
+    ]
+    )
+async def _suggestion_clear(ctx, message_id):
+    await clear_embed(ctx, message_id, "suggestion")
+
+@slash.subcommand(
+    base="suggestion",
+    name="remove",
+    description="Remove a suggestion", 
+    guild_ids=[873835757238894592],
+    options=[
+        create_option(
+            name="message_id",
+            description="Copy message id from suggestion",
+            option_type=3,
+            required=True
+        )
+    ]
+    )
+async def _suggestion_remove(ctx, message_id):
+
+    msg =  await msg_fetch(ctx, message_id, "suggestion")
+    if msg == 0:
+        return 0
+
+
+    if True or ctx.message.author == msg.author:
+        await msg.delete(delay=5)
+        await ctx.send('Message deleted', hidden=True)
+    else:
+        await ctx.send(f'{ctx.message.author.mention}, that\'s not your message 😡')
 
 client.run(token)
