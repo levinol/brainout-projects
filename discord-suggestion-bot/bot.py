@@ -31,26 +31,20 @@ event_id = settings['event_channel']
 server_id = settings['suggest_server_channel']
 embed_channels = [settings['submit_channel'], settings['submit_final_channel'], settings['suggest_channel'], settings['suggest_server_channel'], settings['event_channel']]
 subm_embed = Embed.from_dict(submission_embed)
-simp_embed = Embed.from_dict(simplified_embed)
 sugst_embed = Embed.from_dict(suggestion_embed)
-sugst_simp_embed = Embed.from_dict(suggestion_simp_embed)
+
 help_emb = Embed.from_dict(help_embed)
 
 @client.remove_command('help')
 @client.command()
-async def help(ctx, type_help='s'): 
-    if ctx.channel.id == settings['submit_desc_channel']:
-        if type_help == 'r':
-            await ctx.send(embed=subm_embed)
-        elif type_help == 's':
-            await ctx.send(embed=simp_embed)
-    elif  ctx.channel.id == settings['suggest_desc_channel']:
-        if type_help == 'r':
-            await ctx.send(embed=sugst_embed)
-        elif type_help == 's':
-            await ctx.send(embed=sugst_simp_embed)
+async def help(ctx, task_typo=None):
+    if task_typo == "suggestion":
+        await ctx.send(embed=sugst_embed)
+    elif task_typo == "submission":
+        await ctx.send(embed=subm_embed)
     else:
         await ctx.send(embed=help_emb)
+    await delete_with_react(ctx.message)
 
 
 async def add_сomment(comment, mode): # команда, добавляющая комментарий в ембед 
@@ -137,6 +131,36 @@ async def on_message(message):
 # NEW ERA of SLASH COMMANDS
 from discord_slash import SlashCommand, SlashContext
 from discord_slash.utils.manage_commands import create_choice, create_option
+from discord_slash.utils.manage_components import create_select, create_select_option, create_actionrow
+
+select = create_select(
+    options=[# the options in your dropdown
+         create_select_option("'Submission' commands", value="submission", emoji="🙈"),
+        create_select_option("'Suggestion' commands", value="suggestion", emoji="🙉"),
+    ],
+    placeholder="Choose your help page",  # the placeholder text to show when no options have been chosen
+    min_values=1,  # the minimum number of options a user must select
+    max_values=1,  # the maximum number of options a user can select
+)
+
+@slash.slash(
+    name="help",
+    description="Get help page",
+    guild_ids=[873835757238894592]
+)
+async def _hello(ctx): 
+    await ctx.send(embed=help_emb, components=[create_actionrow(select)])  
+
+@client.event
+async def on_component(ctx):
+    # ctx.selected_options is a list of all the values the user selected
+    if ctx.selected_options[0] == "suggestion":
+        await ctx.send(embed=sugst_embed, hidden=True)
+    elif ctx.selected_options[0] == "submission":
+        await ctx.send(embed=subm_embed, hidden=True)
+    else:
+        await ctx.send('uhhh im stuck')
+
 
 async def send_embed_with_file(ctx, args, channel_id, sep_1, sep_2, image_req):
     author = ctx.message.author
@@ -354,7 +378,6 @@ async def clear_embed(ctx, message_id, channel_flag):
 )
 async def _hello(ctx:SlashContext): 
     await ctx.send(f'Hello, {ctx.author.mention}!', hidden=True)
-    
 
 # submission part
 @slash.subcommand(
@@ -365,7 +388,7 @@ async def _hello(ctx:SlashContext):
     options=[
         create_option(
             name="artwork_name",
-            description="Pls name it Hell",
+            description="Name of your artwork",
             option_type=3,
             required=True
         ),
@@ -480,7 +503,7 @@ async def _submission_add(ctx, message_id, message=None):
         ),
         create_option(
             name="message",
-            description="Message",
+            description="Message for addendum field",
             option_type=3,
             required=True
         )
@@ -505,40 +528,6 @@ async def _submission_addendum(ctx, message_id, message):
     )
 async def _submission_clear(ctx, message_id):
     await clear_embed(ctx, message_id, "submission")
-    # msg =  await msg_fetch(ctx, message_id, "submission")
-    # if msg == 0:
-    #     return 0
-
-
-    # if True or ctx.message.author == msg.author:
-    #     embed = msg.embeds[0]
-    #     # check if any comment exists
-    #     embed_dict = embed.to_dict()
-    #     temp_flag = 0
-    #     if 'fields' in embed_dict:
-    #         for field in embed_dict['fields']:
-    #             if 'comment' in field['name']:
-    #                 temp_flag = 1
-
-    #     if temp_flag:
-    #             #role cheeeeeck
-    #         roles_ids = []
-    #         for r in ctx.message.author.roles:
-    #             roles_ids.append(r.id)
-
-    #         if set(roles.values()).intersection(set(roles_ids)):
-    #             embed.clear_fields()
-    #             await msg.edit(embed=embed)
-    #         else:
-    #             bot_respond = await ctx.send(f"{ctx.message.author.mention}, the message contains someone else's comment, I cannot clear it")
-    #             await delete_with_react(bot_respond) 
-    #     else:
-    #         embed.clear_fields()
-    #         await msg.edit(embed=embed)
-    #         await ctx.send('Fields cleared', hidden=True)
-
-    # else:
-    #     await ctx.send(f'{ctx.message.author.mention}, that\'s not your message 😡')
 
 
 @slash.subcommand(
@@ -577,13 +566,13 @@ async def _submission_remove(ctx, message_id):
     options=[
         create_option(
             name="suggestion_topic",
-            description="Pls name it Hell",
+            description="The topic of your suggestion",
             option_type=3,
             required=True
         ),
         create_option(
             name="description",
-            description="Description of your work",
+            description="Description of your suggestion",
             option_type=3,
             required=True
         )
@@ -629,13 +618,13 @@ async def suggestion(ctx, *, args): # suggest команда создающая 
     options=[
         create_option(
             name="artwork_name",
-            description="Pls name it Hell",
+            description="The topic of your suggestion",
             option_type=3,
             required=True
         ),
         create_option(
             name="description",
-            description="Optional description of your work",
+            description="Description of your suggestion",
             option_type=3,
             required=True
         )
@@ -671,9 +660,9 @@ async def _suggestion_server(ctx, artwork_name, description=None):
         ),
         create_option(
             name="message",
-            description="Message",
+            description="Message for addendum field",
             option_type=3,
-            required=True
+            required=False
         )
     ]
     )
@@ -694,7 +683,7 @@ async def _suggestion_add(ctx, message_id, message):
         ),
         create_option(
             name="message",
-            description="Message",
+            description="Message for addendum field",
             option_type=3,
             required=True
         )
