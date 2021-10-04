@@ -3,6 +3,7 @@ import re
 import discord
 from discord import activity
 from discord import role
+from discord.channel import VoiceChannel
 from discord.embeds import Embed, EmptyEmbed
 from discord.ext import commands
 from discord.flags import PublicUserFlags
@@ -29,6 +30,7 @@ submit_id = settings['submit_channel']
 suggest_id = settings['suggest_channel']
 event_id = settings['event_channel']
 server_id = settings['suggest_server_channel']
+online_id = settings['online_channel']
 embed_channels = [settings['submit_channel'], settings['submit_final_channel'], settings['suggest_channel'], settings['suggest_server_channel'], settings['event_channel']]
 subm_embed = Embed.from_dict(submission_embed)
 sugst_embed = Embed.from_dict(suggestion_embed)
@@ -46,6 +48,17 @@ async def help(ctx, task_typo=None):
         await ctx.send(embed=help_emb)
     await delete_with_react(ctx.message)
 
+import requests
+from discord.ext import tasks
+
+@tasks.loop(minutes=10)
+async def OnlinePlayersUpdate():
+    VoiceChannel = await client.fetch_channel(online_id)
+
+    print(VoiceChannel)
+    r=requests.get(update_url)
+    print(r)
+    await VoiceChannel.edit(name=f"Online: {r.json()['players']}")
 
 async def add_сomment(comment, mode): # команда, добавляющая комментарий в ембед 
     submit_channel = client.get_channel(comment.channel.id)
@@ -736,4 +749,5 @@ async def _suggestion_remove(ctx, message_id):
     else:
         await ctx.send(f'{ctx.message.author.mention}, that\'s not your message 😡')
 
+OnlinePlayersUpdate.start()
 client.run(token)

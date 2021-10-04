@@ -1,0 +1,11 @@
+version: '3.8'
+
+services:
+  postrges:
+    image: postgres:14-alpine
+    environment:
+      POSTGRES_PASSWORD: password
+      POSTGRES_USER: admin
+    ports:
+      - "5432:5432"
+    restart: always
