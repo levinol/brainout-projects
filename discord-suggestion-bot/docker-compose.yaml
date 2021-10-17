@@ -1,11 +1,28 @@
 version: '3.8'
 
 services:
-  postrges:
+  postgres:
     image: postgres:14-alpine
     environment:
-      POSTGRES_PASSWORD: password
-      POSTGRES_USER: admin
+      - POSTGRES_PASSWORD=password
+      - POSTGRES_USER=admin
+      - POSTGRES_DB=brainout
+    volumes:
+      - ./pg-data:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
     ports:
       - "5432:5432"
     restart: always
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -d brainout -U admin"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+  
+  botti:
+    build:
+      context: ./bot-src
+      dockerfile: DockerFile
+    depends_on:
+      postgres:
+        condition: service_healthy

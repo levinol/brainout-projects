@@ -37,6 +37,26 @@ sugst_embed = Embed.from_dict(suggestion_embed)
 
 help_emb = Embed.from_dict(help_embed)
 
+
+import psycopg2
+
+# Connect to postgres DB
+conn = psycopg2.connect(dbname="brainout", user="admin", password="password", host="postgres")
+
+def author_id_check(msg_id: str, author_id: str, channel_type: str) -> bool:
+    is_author_flag = False
+    with conn.cursor() as cursor:
+        conn.autocommit = True
+        print(channel_type)
+        if channel_type == 'submission':
+            cursor.execute("SELECT author_id FROM brainout.submissions WHERE msg_id = %s", (msg_id,))
+        elif channel_type == 'suggestion':
+            cursor.execute("SELECT author_id FROM brainout.suggestions WHERE msg_id = %s", (msg_id,))
+        result = cursor.fetchone()
+        if author_id in result:
+            is_author_flag = True
+    return is_author_flag
+
 @client.remove_command('help')
 @client.command()
 async def help(ctx, task_typo=None):
@@ -187,12 +207,11 @@ async def send_embed_with_file(ctx, args, channel_id, sep_1, sep_2, image_req):
 
     if msg_desc == '': msg_desc = discord.Embed.Empty
 
-    await create_embed_with_reactions(ctx, msg_title, msg_desc, channel_id, image_req)    
+    msg_id = await create_embed_with_reactions(ctx, msg_title, msg_desc, channel_id, image_req)    
 
-    # Удаляем изначальную команду
-    await delete_with_react(ctx.message)
+    return msg_id
 
-async def add_file_to_embed(ctx, args, sep_1, sep_2, channel_flag=None):
+async def add_file_to_embed(ctx, args, sep_1, sep_2, channel_flag):
     arg_partition = args.partition(sep_2)
     if arg_partition[0]!= '':
         message = arg_partition[2]
@@ -201,13 +220,20 @@ async def add_file_to_embed(ctx, args, sep_1, sep_2, channel_flag=None):
         message = arg_partition[2].partition(sep_1)[0]
         message_id = arg_partition[2].partition(sep_1)[2]
     
+    message = message.strip()
+    message_id = message_id.strip()
+
     # ищем мессаге
     msg =  await msg_fetch(ctx, message_id, channel_flag)
 
     if msg == 0:
         return 0
 
-    if True or ctx.author == msg.author:
+    print(str(message_id),str(ctx.message.author.id), channel_flag )
+
+    is_author_flag = author_id_check(str(message_id),str(ctx.message.author.id), channel_flag )
+
+    if is_author_flag:
         #gettin msg
         embed = msg.embeds[0]
         if message: # Проверка на существование поля с комментарием и обновление/добавление его
@@ -230,7 +256,7 @@ async def add_file_to_embed(ctx, args, sep_1, sep_2, channel_flag=None):
             
             
         except:
-            bot_respond = await ctx.send(f'{ctx.author.mention}, what about image?')
+            bot_respond = await ctx.send(f'{ctx.message.author.mention}, what about image?')
             await delete_with_react(bot_respond)
             return 0
 
@@ -238,18 +264,20 @@ async def add_file_to_embed(ctx, args, sep_1, sep_2, channel_flag=None):
 
     else:
         await ctx.send(f'{ctx.message.author.mention}, that\'s not your message 😡')
+        # Удаляем изначальную команду
+        await delete_with_react(ctx.message)   
 
-    # Удаляем изначальную команду
-    await delete_with_react(ctx.message)   
 
-async def add_text_to_embed(ctx, message, message_id, channel_flag=None):
+async def add_text_to_embed(ctx, message, message_id, channel_flag):
     # ищем мессаге
     msg =  await msg_fetch_slash(ctx, message_id, channel_flag)
 
     if msg == 0:
         return 0
 
-    if True or ctx.author == msg.author:
+    is_author_flag = author_id_check(str(message_id),str(ctx.author.id), channel_flag )
+
+    if is_author_flag:
         #gettin msg
         embed = msg.embeds[0]
         if message: # Проверка на существование поля с комментарием и обновление/добавление его
@@ -279,7 +307,7 @@ async def add_text_to_embed(ctx, message, message_id, channel_flag=None):
         await msg.edit(embed=embed)
         await ctx.send('Addendum was replaced', hidden=True) if temp_flag else await ctx.send('Addendum was added', hidden=True)
     else:
-        await ctx.send(f'{ctx.message.author.mention}, that\'s not your message 😡')
+        await ctx.send(f'{ctx.author.mention}, that\'s not your message 😡')
   
 
 async def msg_fetch(ctx, message_id, channel_flag):
@@ -344,18 +372,21 @@ async def create_embed_with_reactions(ctx, msg_title, msg_desc,channel_id, image
     dispatched_embed = await delivery_channel.send(embed=embed)
 
     embed.set_footer(text='Message ID: '+ str(dispatched_embed.id))
+
     await dispatched_embed.edit(embed=embed)
     await dispatched_embed.add_reaction("👍")
     await dispatched_embed.add_reaction("👎")
+    return str(dispatched_embed.id)
 
 async def clear_embed(ctx, message_id, channel_flag):
 
-    msg =  await msg_fetch(ctx, message_id, channel_flag)
+    msg =  await msg_fetch_slash(ctx, message_id, channel_flag)
     if msg == 0:
         return 0
 
+    is_author_flag = author_id_check(str(message_id),str(ctx.author.id), channel_flag)
 
-    if True or ctx.message.author == msg.author:
+    if is_author_flag:
         embed = msg.embeds[0]
         # check if any comment exists
         embed_dict = embed.to_dict()
@@ -368,21 +399,21 @@ async def clear_embed(ctx, message_id, channel_flag):
         if temp_flag:
                 #role cheeeeeck
             roles_ids = []
-            for r in ctx.message.author.roles:
+            for r in ctx.author.roles:
                 roles_ids.append(r.id)
 
             if set(roles.values()).intersection(set(roles_ids)):
                 embed.clear_fields()
                 await msg.edit(embed=embed)
             else:
-                await ctx.send(f"{ctx.message.author.mention}, the message contains someone else's comment, I cannot clear it", hidden=True)
+                await ctx.send(f"{ctx.author.mention}, the message contains someone else's comment, I cannot clear it", hidden=True)
         else:
             embed.clear_fields()
             await msg.edit(embed=embed)
             await ctx.send('Fields cleared', hidden=True)
 
     else:
-        await ctx.send(f'{ctx.message.author.mention}, that\'s not your message 😡')
+        await ctx.send(f'{ctx.author.mention}, that\'s not your message 😡')
 
 @slash.slash(
     name="hello",
@@ -424,7 +455,10 @@ async def _submission_main(ctx, artwork_name, description=None):
         msg_title = artwork_name
         msg_desc = discord.Embed.Empty 
 
-    await create_embed_with_reactions(ctx, msg_title, msg_desc, submit_id, image_req=True)
+    msg_id = await create_embed_with_reactions(ctx, msg_title, msg_desc, submit_id, image_req=True)
+    with conn.cursor() as cursor:
+        conn.autocommit = True
+        cursor.execute(f"INSERT INTO brainout.submissions(author_id, msg_id, in_final) VALUES ({author.id}, {msg_id}, {False})")
 
     await ctx.send(f'{author.mention}, provide the files in necessary format wia add command', hidden=True)  
 
@@ -437,7 +471,10 @@ async def submission(ctx, *, args): # submit команда создающая e
     msg = args
     author = ctx.message.author
     if command_type == 'main':
-        await send_embed_with_file(ctx, args, submit_id, "artwork_name:", "description:", image_req=True)
+        msg_id = await send_embed_with_file(ctx, args, submit_id, "artwork_name:", "description:", image_req=True)
+        with conn.cursor() as cursor:
+            conn.autocommit = True
+            cursor.execute(f"INSERT INTO brainout.submissions(author_id, msg_id, in_final) VALUES ({author.id}, {msg_id}, {False})")
     elif command_type == 'add':
         await add_file_to_embed(ctx, args, "message_id:", "message:", channel_flag="submission")    
     else:
@@ -542,6 +579,7 @@ async def _submission_addendum(ctx, message_id, message):
 async def _submission_clear(ctx, message_id):
     await clear_embed(ctx, message_id, "submission")
 
+import sys
 
 @slash.subcommand(
     base="submission",
@@ -559,16 +597,17 @@ async def _submission_clear(ctx, message_id):
     )
 async def _submission_remove(ctx, message_id):
 
-    msg =  await msg_fetch(ctx, message_id, "submission")
+    msg =  await msg_fetch_slash(ctx, message_id, "submission")
     if msg == 0:
         return 0
 
+    is_author_flag = author_id_check(str(message_id),str(ctx.author.id), 'submission' )
 
-    if True or ctx.message.author == msg.author:
+    if is_author_flag:
         await msg.delete(delay=5)
         await ctx.send('Message deleted', hidden=True)
     else:
-        await ctx.send(f'{ctx.message.author.mention}, that\'s not your message 😡')
+        await ctx.send(f'{ctx.author.mention}, that\'s not your message 😡')
 
 # suggestion part
 @slash.subcommand(
@@ -603,8 +642,10 @@ async def _suggestion_main(ctx, suggestion_topic, description=None):
         msg_title = suggestion_topic
         msg_desc = discord.Embed.Empty 
     
-    await create_embed_with_reactions(ctx, msg_title, msg_desc, suggest_id , image_req=False)
-
+    msg_id = await create_embed_with_reactions(ctx, msg_title, msg_desc, suggest_id , image_req=False)
+    with conn.cursor() as cursor:
+        conn.autocommit = True
+        cursor.execute(f"INSERT INTO brainout.suggestions(author_id, msg_id) VALUES ({author.id}, {msg_id})")
     await ctx.send(f'{author.mention}, provide the files in necessary format wia add command', hidden=True)
 
 # _suggestion_main command with attached image
@@ -615,9 +656,16 @@ async def suggestion(ctx, *, args): # suggest команда создающая 
     msg = args
     author = ctx.message.author
     if command_type == 'main':
-        await send_embed_with_file(ctx, args, suggest_id, "suggestion_topic:", "description:", image_req=False) 
+        msg_id = await send_embed_with_file(ctx, args, suggest_id, "suggestion_topic:", "description:", image_req=False)
+        with conn.cursor() as cursor:
+            conn.autocommit = True
+            cursor.execute(f"INSERT INTO brainout.suggestions(author_id, msg_id) VALUES ({author.id}, {msg_id})")
     elif command_type == 'server':
-        await send_embed_with_file(ctx, args, server_id,"artwork_name:",  "description:", image_req=False)
+        msg_id = await send_embed_with_file(ctx, args, server_id,"artwork_name:",  "description:", image_req=False)
+        with conn.cursor() as cursor:
+            conn.autocommit = True
+            cursor.execute(f"INSERT INTO brainout.suggestions(author_id, msg_id) VALUES ({author.id}, {msg_id})")
+
     elif command_type == 'add':
         await add_file_to_embed(ctx, args, "message_id:", "message:", channel_flag="suggestion")
     else:
@@ -630,7 +678,7 @@ async def suggestion(ctx, *, args): # suggest команда создающая 
     guild_ids=[873835757238894592],
     options=[
         create_option(
-            name="artwork_name",
+            name="suggestion_topic",
             description="The topic of your suggestion",
             option_type=3,
             required=True
@@ -643,19 +691,21 @@ async def suggestion(ctx, *, args): # suggest команда создающая 
         )
     ]
     )
-async def _suggestion_server(ctx, artwork_name, description=None):
+async def _suggestion_server(ctx, suggestion_topic, description=None):
     author = ctx.author
     
     #Разделяем на title и desc
     if description:
-        msg_title = artwork_name
+        msg_title = suggestion_topic
         msg_desc = description
     else:
-        msg_title = artwork_name
+        msg_title = suggestion_topic
         msg_desc = discord.Embed.Empty 
 
-    await create_embed_with_reactions(ctx, msg_title, msg_desc, server_id , image_req=False)
-
+    msg_id = await create_embed_with_reactions(ctx, msg_title, msg_desc, server_id , image_req=False)
+    with conn.cursor() as cursor:
+        conn.autocommit = True
+        cursor.execute(f"INSERT INTO brainout.suggestions(author_id, msg_id) VALUES ({author.id}, {msg_id})")
     await ctx.send(f'{author.mention}, provide the files in necessary format wia add command', hidden=True)
 
 
@@ -738,16 +788,17 @@ async def _suggestion_clear(ctx, message_id):
     )
 async def _suggestion_remove(ctx, message_id):
 
-    msg =  await msg_fetch(ctx, message_id, "suggestion")
+    msg =  await msg_fetch_slash(ctx, message_id, "suggestion")
     if msg == 0:
         return 0
 
+    is_author_flag = author_id_check(str(message_id),str(ctx.author.id), 'suggestion' )
 
-    if True or ctx.message.author == msg.author:
+    if is_author_flag:
         await msg.delete(delay=5)
         await ctx.send('Message deleted', hidden=True)
     else:
-        await ctx.send(f'{ctx.message.author.mention}, that\'s not your message 😡')
+        await ctx.send(f'{ctx.author.mention}, that\'s not your message 😡')
 
 OnlinePlayersUpdate.start()
 client.run(token)
