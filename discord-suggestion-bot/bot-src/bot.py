@@ -27,6 +27,7 @@ slash = SlashCommand(client, sync_commands=True)
 
 token = settings['token']
 submit_id = settings['submit_channel']
+submit_final_id = settings['submit_final_channel']
 suggest_id = settings['suggest_channel']
 event_id = settings['event_channel']
 server_id = settings['suggest_server_channel']
@@ -106,11 +107,37 @@ async def reaction_count(payload):
         react1 = react1.count
         react2 = react2.count
 
-
-        if react1 > 50 and react2 < 20:
+        if react1 > 2 and react2 < 2:
+            #Move to final if paylod == submission channel id
             embed.colour = 0x3CB371
-        elif react2 > 20:
+
+            if payload.channel_id == submit_id:
+                with conn.cursor() as cursor:
+                    conn.autocommit = True
+                    cursor.execute("SELECT in_final FROM brainout.submissions WHERE msg_id = %s", (str(msg.id),))
+                    result = cursor.fetchone()
+
+                if result[0]:
+                    # already in finals
+                    pass
+                else:
+                    with conn.cursor() as cursor:
+                        conn.autocommit = True
+                        cursor.execute("UPDATE brainout.submissions SET in_final = %s WHERE msg_id = %s", (True, str(msg.id),))
+
+                    delivery_channel = client.get_channel(submit_final_id)
+
+                    dispatched_embed = await delivery_channel.send(embed=embed)
+
+                    embed.set_footer(text='Message ID: '+ str(dispatched_embed.id))
+
+                    await dispatched_embed.edit(embed=embed)
+                    await dispatched_embed.add_reaction("👍")
+                    await dispatched_embed.add_reaction("👎")   
+        elif react2 > 2:
+            # delete 
             embed.colour = 0xFF0000
+            await delete_with_react(msg)
         elif react1 > react2:
             embed.colour = 0x228B22
         elif react1 == react2:
