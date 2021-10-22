@@ -209,7 +209,7 @@ select = create_select(
     guild_ids=[873835757238894592]
 )
 async def _hello(ctx): 
-    await ctx.send(embed=help_emb, components=[create_actionrow(select)])  
+    await ctx.send(embed=help_emb, components=[create_actionrow(select)])
 
 @client.event
 async def on_component(ctx):
@@ -826,6 +826,63 @@ async def _suggestion_remove(ctx, message_id):
         await ctx.send('Message deleted', hidden=True)
     else:
         await ctx.send(f'{ctx.author.mention}, that\'s not your message 😡')
+
+# Mod tools
+@slash.subcommand(
+    base="bottools",
+    name="update_msg_id",
+    description="Update footer with msg_id of embed message", 
+    guild_ids=[873835757238894592],
+    options=[
+        create_option(
+            name="message_id",
+            description="Copy message id from suggestion",
+            option_type=3,
+            required=True
+        ),
+        create_option(
+            name="channel_flag",
+            description="Original msg channel",
+            option_type=3,
+            required=True,
+            choices=[
+                  create_choice(
+                    name="msg in sumbission channel",
+                    value="submission"
+                  ),
+                  create_choice(
+                    name="msg in suggestion channel",
+                    value="suggestion"
+                  )
+            ]
+        )
+    ]
+    )
+async def _bottools_update_msg_id(ctx, message_id, channel_flag):
+    dispatched_embed = msg_fetch_slash(ctx, message_id, channel_flag)
+    embed = dispatched_embed.embeds[0]
+    embed.set_footer(text='Message ID: '+ str(dispatched_embed.id))
+    await dispatched_embed.edit(embed=embed)
+
+
+@slash.subcommand(
+    base="bottools",
+    name="reset_final_flag",
+    description="Reset final_flag on msg, so its can appears in finals again", 
+    guild_ids=[873835757238894592],
+    options=[
+        create_option(
+            name="message_id",
+            description="Copy message id from suggestion, ONLY FOR SUBMISSIONS",
+            option_type=3,
+            required=True
+        )
+    ]
+)
+async def _bottools_reset_final_flag(ctx, message_id):
+    with conn.cursor() as cursor:
+        conn.autocommit = True
+        cursor.execute("UPDATE brainout.submissions SET in_final = %s WHERE msg_id = %s", (False, message_id,))
 
 OnlinePlayersUpdate.start()
 client.run(token)
