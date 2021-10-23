@@ -483,11 +483,14 @@ async def _submission_main(ctx, artwork_name, description=None):
         msg_desc = discord.Embed.Empty 
 
     msg_id = await create_embed_with_reactions(ctx, msg_title, msg_desc, submit_id, image_req=True)
-    with conn.cursor() as cursor:
-        conn.autocommit = True
-        cursor.execute(f"INSERT INTO brainout.submissions(author_id, msg_id, in_final) VALUES ({author.id}, {msg_id}, {False})")
 
-    await ctx.send(f'{author.mention}, provide the files in necessary format wia add command', hidden=True)  
+    if len(msg_id) < 5:
+        await ctx.send(f'{author.mention}, ask helper to update message id of your embed')
+    else:
+        with conn.cursor() as cursor:
+            conn.autocommit = True
+            cursor.execute(f"INSERT INTO brainout.submissions(author_id, msg_id, in_final) VALUES ({author.id}, {msg_id}, {False})")
+        await ctx.send(f'{author.mention}, provide the files in necessary format wia add command', hidden=True)  
 
 # _submission_main command with attached image
 # _submission_add command with attached image
@@ -499,9 +502,12 @@ async def submission(ctx, *, args): # submit команда создающая e
     author = ctx.message.author
     if command_type == 'main':
         msg_id = await send_embed_with_file(ctx, args, submit_id, "artwork_name:", "description:", image_req=True)
-        with conn.cursor() as cursor:
-            conn.autocommit = True
-            cursor.execute(f"INSERT INTO brainout.submissions(author_id, msg_id, in_final) VALUES ({author.id}, {msg_id}, {False})")
+        if len(msg_id) < 5:
+            await ctx.send(f'{author.mention}, ask helper to update message id of your embed')
+        else:
+            with conn.cursor() as cursor:
+                conn.autocommit = True
+                cursor.execute(f"INSERT INTO brainout.submissions(author_id, msg_id, in_final) VALUES ({author.id}, {msg_id}, {False})")
     elif command_type == 'add':
         await add_file_to_embed(ctx, args, "message_id:", "message:", channel_flag="submission")    
     else:
@@ -670,10 +676,13 @@ async def _suggestion_main(ctx, suggestion_topic, description=None):
         msg_desc = discord.Embed.Empty 
     
     msg_id = await create_embed_with_reactions(ctx, msg_title, msg_desc, suggest_id , image_req=False)
-    with conn.cursor() as cursor:
-        conn.autocommit = True
-        cursor.execute(f"INSERT INTO brainout.suggestions(author_id, msg_id) VALUES ({author.id}, {msg_id})")
-    await ctx.send(f'{author.mention}, provide the files in necessary format wia add command', hidden=True)
+    if len(msg_id) < 5:
+        await ctx.send(f'{author.mention}, ask helper to update message id of your embed')
+    else:
+        with conn.cursor() as cursor:
+            conn.autocommit = True
+            cursor.execute(f"INSERT INTO brainout.suggestions(author_id, msg_id) VALUES ({author.id}, {msg_id})")
+        await ctx.send(f'{author.mention}, provide the files in necessary format wia add command', hidden=True)
 
 # _suggestion_main command with attached image
 @client.command()
@@ -684,14 +693,20 @@ async def suggestion(ctx, *, args): # suggest команда создающая 
     author = ctx.message.author
     if command_type == 'main':
         msg_id = await send_embed_with_file(ctx, args, suggest_id, "suggestion_topic:", "description:", image_req=False)
-        with conn.cursor() as cursor:
-            conn.autocommit = True
-            cursor.execute(f"INSERT INTO brainout.suggestions(author_id, msg_id) VALUES ({author.id}, {msg_id})")
+        if len(msg_id) < 5:
+            await ctx.send(f'{author.mention}, ask helper to update message id of your embed')
+        else:
+            with conn.cursor() as cursor:
+                conn.autocommit = True
+                cursor.execute(f"INSERT INTO brainout.suggestions(author_id, msg_id) VALUES ({author.id}, {msg_id})")
     elif command_type == 'server':
         msg_id = await send_embed_with_file(ctx, args, server_id,"artwork_name:",  "description:", image_req=False)
-        with conn.cursor() as cursor:
-            conn.autocommit = True
-            cursor.execute(f"INSERT INTO brainout.suggestions(author_id, msg_id) VALUES ({author.id}, {msg_id})")
+        if len(msg_id) < 5:
+            await ctx.send(f'{author.mention}, ask helper to update message id of your embed')
+        else:
+            with conn.cursor() as cursor:
+                conn.autocommit = True
+                cursor.execute(f"INSERT INTO brainout.suggestions(author_id, msg_id) VALUES ({author.id}, {msg_id})")
 
     elif command_type == 'add':
         await add_file_to_embed(ctx, args, "message_id:", "message:", channel_flag="suggestion")
@@ -730,10 +745,13 @@ async def _suggestion_server(ctx, suggestion_topic, description=None):
         msg_desc = discord.Embed.Empty 
 
     msg_id = await create_embed_with_reactions(ctx, msg_title, msg_desc, server_id , image_req=False)
-    with conn.cursor() as cursor:
-        conn.autocommit = True
-        cursor.execute(f"INSERT INTO brainout.suggestions(author_id, msg_id) VALUES ({author.id}, {msg_id})")
-    await ctx.send(f'{author.mention}, provide the files in necessary format wia add command', hidden=True)
+    if len(msg_id) < 5:
+        await ctx.send(f'{author.mention}, ask helper to update message id of your embed')
+    else:   
+        with conn.cursor() as cursor:
+            conn.autocommit = True
+            cursor.execute(f"INSERT INTO brainout.suggestions(author_id, msg_id) VALUES ({author.id}, {msg_id})")
+        await ctx.send(f'{author.mention}, provide the files in necessary format wia add command', hidden=True)
 
 
 @slash.subcommand(
@@ -828,6 +846,9 @@ async def _suggestion_remove(ctx, message_id):
         await ctx.send(f'{ctx.author.mention}, that\'s not your message 😡')
 
 # Mod tools
+from discord_slash.utils.manage_commands import create_permission
+from discord_slash.model import SlashCommandPermissionType
+
 @slash.subcommand(
     base="bottools",
     name="update_msg_id",
@@ -856,20 +877,40 @@ async def _suggestion_remove(ctx, message_id):
                   )
             ]
         )
-    ]
+    ],
+    base_default_permission=False,
+    base_permissions={
+        873835757238894592: [
+            create_permission(roles['helper'], SlashCommandPermissionType.ROLE, True),
+            create_permission(roles['moderator'], SlashCommandPermissionType.ROLE, True),
+            create_permission(roles['admin'], SlashCommandPermissionType.ROLE, True),
+            create_permission(roles['dev'], SlashCommandPermissionType.ROLE, True)
+        ]
+    }
     )
 async def _bottools_update_msg_id(ctx, message_id, channel_flag):
-    dispatched_embed = msg_fetch_slash(ctx, message_id, channel_flag)
-    embed = dispatched_embed.embeds[0]
-    embed.set_footer(text='Message ID: '+ str(dispatched_embed.id))
-    await dispatched_embed.edit(embed=embed)
-
-
+    dispatched_embed = await msg_fetch_slash(ctx, message_id, channel_flag)
+    if dispatched_embed:
+        embed = dispatched_embed.embeds[0]
+        embed.set_footer(text='Message ID: '+ str(dispatched_embed.id))
+        await dispatched_embed.edit(embed=embed)
+        await ctx.send('Msg id updated', hidden=True)
+    else:
+        await ctx.send('Can\'t find the message', hidden=True)
 @slash.subcommand(
     base="bottools",
     name="reset_final_flag",
     description="Reset final_flag on msg, so its can appears in finals again", 
     guild_ids=[873835757238894592],
+    base_default_permission=False,
+    base_permissions={
+        873835757238894592: [
+            create_permission(roles['helper'], SlashCommandPermissionType.ROLE, True),
+            create_permission(roles['moderator'], SlashCommandPermissionType.ROLE, True),
+            create_permission(roles['admin'], SlashCommandPermissionType.ROLE, True),
+            create_permission(roles['dev'], SlashCommandPermissionType.ROLE, True)
+        ]
+    },
     options=[
         create_option(
             name="message_id",
@@ -883,6 +924,7 @@ async def _bottools_reset_final_flag(ctx, message_id):
     with conn.cursor() as cursor:
         conn.autocommit = True
         cursor.execute("UPDATE brainout.submissions SET in_final = %s WHERE msg_id = %s", (False, message_id,))
+    await ctx.send('Final flag was reset', hidden=True)
 
-OnlinePlayersUpdate.start()
+#OnlinePlayersUpdate.start()
 client.run(token)
