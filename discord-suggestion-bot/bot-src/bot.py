@@ -492,6 +492,52 @@ async def _submission_main(ctx, artwork_name, description=None):
             cursor.execute(f"INSERT INTO brainout.submissions(author_id, msg_id, in_final) VALUES ({author.id}, {msg_id}, {False})")
         await ctx.send(f'{author.mention}, provide the files in necessary format wia add command', hidden=True)  
 
+@slash.subcommand(
+    base="submission",
+    name="event", 
+    description="Make a submission in event channel", 
+    guild_ids=[873835757238894592],
+    options=[
+        create_option(
+            name="artwork_name",
+            description="Name of your artwork",
+            option_type=3,
+            required=True
+        ),
+        create_option(
+            name="description",
+            description="Optional description of your work",
+            option_type=3,
+            required=False
+        )
+    ]
+    )
+async def _submission_event(ctx, artwork_name, description=None):
+    if event_id:
+        pass
+    else:
+        await ctx.send('No active event', hidden=True)
+        return 0
+    author = ctx.author
+    
+    #Разделяем на title и desc
+    if description:
+        msg_title = artwork_name
+        msg_desc = description
+    else:
+        msg_title = artwork_name
+        msg_desc = discord.Embed.Empty 
+
+    msg_id = await create_embed_with_reactions(ctx, msg_title, msg_desc, event_id, image_req=True)
+
+    if len(msg_id) < 5:
+        await ctx.send(f'{author.mention}, ask helper to update message id of your embed')
+    else:
+        with conn.cursor() as cursor:
+            conn.autocommit = True
+            cursor.execute(f"INSERT INTO brainout.submissions(author_id, msg_id, in_final) VALUES ({author.id}, {msg_id}, {False})")
+        await ctx.send(f'{author.mention}, provide the files in necessary format wia add command', hidden=True)  
+
 # _submission_main command with attached image
 # _submission_add command with attached image
 @client.command()
@@ -508,46 +554,23 @@ async def submission(ctx, *, args): # submit команда создающая e
             with conn.cursor() as cursor:
                 conn.autocommit = True
                 cursor.execute(f"INSERT INTO brainout.submissions(author_id, msg_id, in_final) VALUES ({author.id}, {msg_id}, {False})")
+    elif command_type == 'event':
+        if event_id:
+            pass
+        else:
+            await ctx.send('No active event')
+            return 0
+        msg_id = await send_embed_with_file(ctx, args, event_id, "artwork_name:", "description:", image_req=True)
+        if len(msg_id) < 5:
+            await ctx.send(f'{author.mention}, ask helper to update message id of your embed')
+        else:
+            with conn.cursor() as cursor:
+                conn.autocommit = True
+                cursor.execute(f"INSERT INTO brainout.submissions(author_id, msg_id, in_final) VALUES ({author.id}, {msg_id}, {False})")
     elif command_type == 'add':
         await add_file_to_embed(ctx, args, "message_id:", "message:", channel_flag="submission")    
     else:
         await ctx.send('uhh im stuck')
-
-""" @slash.subcommand(
-    base="submission",
-    name="event",
-    description="Make a submission in event channel", 
-    guild_ids=[873835757238894592],
-    options=[
-        create_option(
-            name="artwork_name",
-            description="Pls name it Hell",
-            option_type=3,
-            required=True
-        ),
-        create_option(
-            name="description",
-            description="Optional description of your work",
-            option_type=3,
-            required=False
-        )
-    ]
-    )
-async def _submission_event(ctx, artwork_name, description=None):
-    
-    author = ctx.author
-    
-    #Разделяем на title и desc
-    if description:
-        msg_title = artwork_name
-        msg_desc = description
-    else:
-        msg_title = artwork_name
-        msg_desc = discord.Embed.Empty 
-
-    await create_embed_with_reactions(ctx, msg_title, msg_desc, submit_id, image_req=True)
-
-    await ctx.send(f'{author.mention}, provide the files in necessary format wia add command', hidden=True)   """
 
 @slash.subcommand(
     base="submission",
