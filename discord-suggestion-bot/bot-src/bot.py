@@ -44,6 +44,7 @@ import psycopg2
 # Connect to postgres DB
 conn = psycopg2.connect(dbname="brainout", user="admin", password="password", host="postgres")
 
+# check if author of original message has same id as author_id
 def author_id_check(msg_id: str, author_id: str, channel_type: str) -> bool:
     is_author_flag = False
     with conn.cursor() as cursor:
@@ -58,6 +59,7 @@ def author_id_check(msg_id: str, author_id: str, channel_type: str) -> bool:
             is_author_flag = True
     return is_author_flag
 
+# standart help page without slash commands
 @client.remove_command('help')
 @client.command()
 async def help(ctx, task_typo=None):
@@ -66,12 +68,14 @@ async def help(ctx, task_typo=None):
     elif task_typo == "submission":
         await ctx.send(embed=subm_embed)
     else:
+        # TODO rework embed
         await ctx.send(embed=help_emb)
     await delete_with_react(ctx.message)
 
 import requests
 from discord.ext import tasks
 
+# Get current online of brain/out 
 @tasks.loop(minutes=10)
 async def OnlinePlayersUpdate():
     VoiceChannel = await client.fetch_channel(online_id)
@@ -81,7 +85,8 @@ async def OnlinePlayersUpdate():
     print(r)
     await VoiceChannel.edit(name=f"Online: {r.json()['players']}")
 
-async def add_сomment(comment, mode): # команда, добавляющая комментарий в ембед 
+# Add comment to embed msg (ahaha these code comments are so helpfull)
+async def add_сomment(comment, mode): 
     submit_channel = client.get_channel(comment.channel.id)
     msg = await submit_channel.fetch_message(comment.reference.message_id)
     embed = msg.embeds[0]
@@ -94,8 +99,8 @@ async def delete_with_react(msg):
     await msg.add_reaction("🚮")
     await msg.delete(delay=7)
 
-#Embeded color thingi
 
+# Change embed color due to reacts count
 async def reaction_count(payload):
     if payload.channel_id in embed_channels:
         submit_channel =client.get_channel(payload.channel_id)
@@ -136,6 +141,7 @@ async def reaction_count(payload):
                     await dispatched_embed.add_reaction("👎")   
         elif react2 > 2:
             # delete 
+            # TODO think about it
             embed.colour = 0xFF0000
             await delete_with_react(msg)
         elif react1 > react2:
@@ -147,29 +153,33 @@ async def reaction_count(payload):
 
         await msg.edit(embed=embed)
 
+# Event handlers for embed reacts count
 @client.event
-async def on_raw_reaction_add(payload): #Чекеры на реакцию, обновляющие цвет embed'a
+async def on_raw_reaction_add(payload): 
     await reaction_count(payload)
 
 @client.event
-async def on_raw_reaction_remove(payload):#Чекер на реакцию, обновляющие цвет embed'a. Вообще говнокод, но я не люблю писать декораторы 
+async def on_raw_reaction_remove(payload):
     await reaction_count(payload)
 
+# Every msg handler
 @client.event
 async def on_message(message):
     await client.process_commands(message)
 
-    if message.reference is not None: #Проверяем является ли сообщение реплаем 
+    # Check if this message is reply 
+    if message.reference is not None: 
         if message.channel.id in [settings['submit_channel'], settings['submit_final_channel'], settings['suggest_channel'], settings['suggest_server_channel']]: # обрабатываем сообщения в канале sumbit_channel
             submit_channel = client.get_channel(message.channel.id)
             
-            #role cheeeeeck
+            #role check
             roles_ids = []
             for r in message.author.roles:
                 roles_ids.append(r.id)
 
             # Govnokod // pls review it later
             # FIXME
+
             if roles['dev'] in roles_ids:
                 await add_сomment(message,'👨‍💻Dev')
             elif roles['designers'] in roles_ids:
@@ -183,7 +193,7 @@ async def on_message(message):
             else:
                 await submit_channel.send("Yo, where is your roles")
             
-            # удаляем реплаи!
+            # Delete reply
             await message.delete()
 
 
@@ -191,9 +201,9 @@ async def on_message(message):
 # NEW ERA of SLASH COMMANDS
 from discord_slash import SlashCommand, SlashContext
 from discord_slash.utils.manage_commands import create_choice, create_option
-from discord_slash.utils.manage_components import create_select, create_select_option, create_actionrow
+from discord_slash.utils.manage_components import create_button, create_select, create_select_option, create_actionrow
 
-select = create_select(
+help_select = create_select(
     options=[# the options in your dropdown
          create_select_option("'Submission' commands", value="submission", emoji="🙈"),
         create_select_option("'Suggestion' commands", value="suggestion", emoji="🙉"),
@@ -209,7 +219,7 @@ select = create_select(
     guild_ids=[873835757238894592]
 )
 async def _hello(ctx): 
-    await ctx.send(embed=help_emb, components=[create_actionrow(select)])
+    await ctx.send(embed=help_emb, components=[create_actionrow(help_select)])
 
 @client.event
 async def on_component(ctx):
@@ -221,7 +231,7 @@ async def on_component(ctx):
     else:
         await ctx.send('uhhh im stuck')
 
-
+# handler for slash commands that were sent with the file
 async def send_embed_with_file(ctx, args, channel_id, sep_1, sep_2, image_req):
     author = ctx.message.author
     arg_partition = args.partition(sep_2)
@@ -238,6 +248,9 @@ async def send_embed_with_file(ctx, args, channel_id, sep_1, sep_2, image_req):
 
     return msg_id
 
+from discord_slash.context import ComponentContext
+
+# handler for slash commands that were sent with the file
 async def add_file_to_embed(ctx, args, sep_1, sep_2, channel_flag):
     arg_partition = args.partition(sep_2)
     if arg_partition[0]!= '':
@@ -250,7 +263,7 @@ async def add_file_to_embed(ctx, args, sep_1, sep_2, channel_flag):
     message = message.strip()
     message_id = message_id.strip()
 
-    # ищем мессаге
+    # looking for message
     msg =  await msg_fetch(ctx, message_id, channel_flag)
 
     if msg == 0:
@@ -261,9 +274,10 @@ async def add_file_to_embed(ctx, args, sep_1, sep_2, channel_flag):
     is_author_flag = author_id_check(str(message_id),str(ctx.message.author.id), channel_flag )
 
     if is_author_flag:
-        #gettin msg
+        #get msg
         embed = msg.embeds[0]
-        if message: # Проверка на существование поля с комментарием и обновление/добавление его
+        # Checking for the existence of a field with a comment and updating / adding it
+        if message: 
             embed_dict = embed.to_dict()
             temp_flag = 0
             if 'fields' in embed_dict:
@@ -279,24 +293,58 @@ async def add_file_to_embed(ctx, args, sep_1, sep_2, channel_flag):
 
         # FIXME 
         try:
-            embed.insert_field_at(index=999, name="Provided file", value=ctx.message.attachments[0].url, inline = False)
-            
-            
+
+            url_link = ctx.message.attachments[0].url
+            url_file = url_link[url_link.rfind('.')+1:].upper()
+
+            embed_dict = embed.to_dict()
+            field_values = ''
+            if 'fields' in embed_dict:
+                for field in embed_dict['fields']:
+                    if field['name'] == "Provided files":
+                        field_values = field['value']
+                        field['value'] += '\n' + url_link
+
+            if field_values:
+                # Get current buttons from msg
+                print(field_values)
+                url_buttons = []
+                for url_iterator in field_values.split('\n'):
+                    url_buttons.append(create_button(
+                        style=ButtonStyle.URL,
+                        label=url_iterator[url_iterator.rfind('.')+1:].upper(),
+                        url=url_iterator
+                        )
+                    )
+                embed = Embed.from_dict(embed_dict)
+            else:
+                url_buttons = []
+                embed.add_field(name="Provided files", value=url_link, inline = False)
+             
+
+            url_buttons.append(create_button(
+                style=ButtonStyle.URL,
+                label=url_file,
+                url=url_link
+                )
+            )
+
         except:
             bot_respond = await ctx.send(f'{ctx.message.author.mention}, what about image?')
             await delete_with_react(bot_respond)
             return 0
 
-        await msg.edit(embed=embed)
+        # TODO discord_slash.error.IncorrectFormat: Number of components in one row should be between 1 and 5.
+        await msg.edit(embed=embed, components=[create_actionrow(*url_buttons)])
 
     else:
         await ctx.send(f'{ctx.message.author.mention}, that\'s not your message 😡')
-        # Удаляем изначальную команду
+        # Delete original message
         await delete_with_react(ctx.message)   
 
-
+# Add addendum to embed msg 
 async def add_text_to_embed(ctx, message, message_id, channel_flag):
-    # ищем мессаге
+    # Looking for msg
     msg =  await msg_fetch_slash(ctx, message_id, channel_flag)
 
     if msg == 0:
@@ -305,9 +353,10 @@ async def add_text_to_embed(ctx, message, message_id, channel_flag):
     is_author_flag = author_id_check(str(message_id),str(ctx.author.id), channel_flag )
 
     if is_author_flag:
-        #gettin msg
+        #get msg
         embed = msg.embeds[0]
-        if message: # Проверка на существование поля с комментарием и обновление/добавление его
+        # Checking for the existence of a field with a comment and updating / adding it
+        if message: 
             embed_dict = embed.to_dict()
             temp_flag = 0
             if 'fields' in embed_dict:
@@ -336,9 +385,9 @@ async def add_text_to_embed(ctx, message, message_id, channel_flag):
     else:
         await ctx.send(f'{ctx.author.mention}, that\'s not your message 😡')
   
-
+# Get msg from any of 4 channels
 async def msg_fetch(ctx, message_id, channel_flag):
-    # ищем мессаге
+    # Looking for msg
     first_channel = client.get_channel(submit_id) if channel_flag == "submission" else client.get_channel(suggest_id)
     second_channel = client.get_channel(event_id) if channel_flag == "submission" else client.get_channel(server_id)
 
@@ -358,8 +407,9 @@ async def msg_fetch(ctx, message_id, channel_flag):
             return 0  
     return msg
 
+# Get msg from any of 4 channels. Feedback with hidden=true parameter
 async def msg_fetch_slash(ctx, message_id, channel_flag):
-    # ищем мессаге
+    # Looking for msg
     first_channel = client.get_channel(submit_id) if channel_flag == "submission" else client.get_channel(suggest_id)
     second_channel = client.get_channel(event_id) if channel_flag == "submission" else client.get_channel(server_id)
 
@@ -378,6 +428,7 @@ async def msg_fetch_slash(ctx, message_id, channel_flag):
             return 0  
     return msg
 
+# Create embed msg in channel_id
 async def create_embed_with_reactions(ctx, msg_title, msg_desc,channel_id, image_req: bool ) -> None:
     author = ctx.author
 
@@ -405,6 +456,7 @@ async def create_embed_with_reactions(ctx, msg_title, msg_desc,channel_id, image
     await dispatched_embed.add_reaction("👎")
     return str(dispatched_embed.id)
 
+# Clear addendum fields if there are no 'role' comments
 async def clear_embed(ctx, message_id, channel_flag):
 
     msg =  await msg_fetch_slash(ctx, message_id, channel_flag)
@@ -424,7 +476,7 @@ async def clear_embed(ctx, message_id, channel_flag):
                     temp_flag = 1
 
         if temp_flag:
-                #role cheeeeeck
+                #role check
             roles_ids = []
             for r in ctx.author.roles:
                 roles_ids.append(r.id)
@@ -442,13 +494,22 @@ async def clear_embed(ctx, message_id, channel_flag):
     else:
         await ctx.send(f'{ctx.author.mention}, that\'s not your message 😡')
 
+from discord_slash.model import ButtonStyle
+
 @slash.slash(
     name="hello",
     description="Say hello to botti",
     guild_ids=[873835757238894592]
 )
 async def _hello(ctx:SlashContext): 
-    await ctx.send(f'Hello, {ctx.author.mention}!', hidden=True)
+    url_bottons = [create_button(
+        style=ButtonStyle.URL,
+        label="Press to spend all ur moneybags",
+        url='https://brainout.org/'
+        ),
+        ]
+    msg = await ctx.send(f'Hello, {ctx.author.mention}!')
+    await msg.edit(components=[create_actionrow(*url_bottons)])
 
 # submission part
 @slash.subcommand(
@@ -474,7 +535,7 @@ async def _hello(ctx:SlashContext):
 async def _submission_main(ctx, artwork_name, description=None):
     author = ctx.author
     
-    #Разделяем на title и desc
+    #Divide into title and desc
     if description:
         msg_title = artwork_name
         msg_desc = description
@@ -520,7 +581,7 @@ async def _submission_event(ctx, artwork_name, description=None):
         return 0
     author = ctx.author
     
-    #Разделяем на title и desc
+    #Divide into title and desc
     if description:
         msg_title = artwork_name
         msg_desc = description
@@ -538,10 +599,11 @@ async def _submission_event(ctx, artwork_name, description=None):
             cursor.execute(f"INSERT INTO brainout.submissions(author_id, msg_id, in_final) VALUES ({author.id}, {msg_id}, {False})")
         await ctx.send(f'{author.mention}, provide the files in necessary format wia add command', hidden=True)  
 
+# submit command creates an embed message, adds the message_id and reactions immediately after creation.
 # _submission_main command with attached image
 # _submission_add command with attached image
 @client.command()
-async def submission(ctx, *, args): # submit команда создающая embed msg, добавляющая message_id и реакции сразу после создания.
+async def submission(ctx, *, args): 
     command_type, args=args.split(' ',1)
     print(command_type, args)
     msg = args
@@ -635,8 +697,6 @@ async def _submission_addendum(ctx, message_id, message):
 async def _submission_clear(ctx, message_id):
     await clear_embed(ctx, message_id, "submission")
 
-import sys
-
 @slash.subcommand(
     base="submission",
     name="remove",
@@ -690,7 +750,7 @@ async def _suggestion_main(ctx, suggestion_topic, description=None):
     
     author = ctx.author
     
-    #Разделяем на title и desc
+    # Divide into title and desc
     if description:
         msg_title = suggestion_topic
         msg_desc = description
@@ -707,9 +767,11 @@ async def _suggestion_main(ctx, suggestion_topic, description=None):
             cursor.execute(f"INSERT INTO brainout.suggestions(author_id, msg_id) VALUES ({author.id}, {msg_id})")
         await ctx.send(f'{author.mention}, provide the files in necessary format wia add command', hidden=True)
 
+
+# suggest command creates embed msg, adding message_id and reactions immediately after creation
 # _suggestion_main command with attached image
 @client.command()
-async def suggestion(ctx, *, args): # suggest команда создающая embed msg, добавляющая message_id и реакции сразу после создания.
+async def suggestion(ctx, *, args): 
     command_type, args=args.split(' ',1)
     print(command_type, args)
     msg = args
@@ -759,7 +821,7 @@ async def suggestion(ctx, *, args): # suggest команда создающая 
 async def _suggestion_server(ctx, suggestion_topic, description=None):
     author = ctx.author
     
-    #Разделяем на title и desc
+    # Divide into title and desc
     if description:
         msg_title = suggestion_topic
         msg_desc = description
@@ -920,6 +982,7 @@ async def _bottools_update_msg_id(ctx, message_id, channel_flag):
         await ctx.send('Msg id updated', hidden=True)
     else:
         await ctx.send('Can\'t find the message', hidden=True)
+
 @slash.subcommand(
     base="bottools",
     name="reset_final_flag",
