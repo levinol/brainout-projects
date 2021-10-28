@@ -18,25 +18,27 @@ import json
 import requests
 from threading import Timer
 import datetime
+import os
 
 from config import *
 
-client = commands.Bot(command_prefix='/', activity=discord.Activity(type=discord.ActivityType.watching, name='Use '+settings['prefix']+'help if u dumb'))
+client = commands.Bot(command_prefix=settings['prefix'], activity=discord.Activity(type=discord.ActivityType.watching, name='Use '+settings['prefix']+'help if u dumb'))
 slash = SlashCommand(client, sync_commands=True)
 
 
-token = settings['token']
+token = os.getenv('BOT_TOKEN')
 submit_id = settings['submit_channel']
 submit_final_id = settings['submit_final_channel']
 suggest_id = settings['suggest_channel']
 event_id = settings['event_channel']
 server_id = settings['suggest_server_channel']
 online_id = settings['online_channel']
-embed_channels = [settings['submit_channel'], settings['submit_final_channel'], settings['suggest_channel'], settings['suggest_server_channel'], settings['event_channel']]
+embed_channels = [submit_id, submit_final_id, suggest_id, server_id, event_id]
+
 subm_embed = Embed.from_dict(submission_embed)
 sugst_embed = Embed.from_dict(suggestion_embed)
-
 help_emb = Embed.from_dict(help_embed)
+help_emb_disabled = Embed.from_dict(help_embed_slash_disabled)
 
 
 import psycopg2
@@ -68,8 +70,7 @@ async def help(ctx, task_typo=None):
     elif task_typo == "submission":
         await ctx.send(embed=subm_embed)
     else:
-        # TODO rework embed
-        await ctx.send(embed=help_emb)
+        await ctx.send(embed=help_emb_disabled)
     await delete_with_react(ctx.message)
 
 import requests
