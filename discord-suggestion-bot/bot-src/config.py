@@ -8,7 +8,6 @@ settings = {
     'suggest_desc_channel': 873900855676526643,
     'suggest_channel': 873835758098718802,
     'suggest_server_channel': 873835758098718803,
-    'event_channel': 873835757528318000,
     'online_channel': 893602540481044570 
 }
 
@@ -25,7 +24,7 @@ roles = {
 submission_embed = {'fields': 
     [{'inline': False, 'name': 'Usage:\n/submission main [artwork name] [description] [mandatory attachment]', 'value': 'Make a submission.'},
         {'inline': False, 'name': '/submission add [message id] [message] [mandatory attachment]', 'value': 'Add an attachment to a submission.'},
-        {'inline': False, 'name': '/submission addendum [message id] [message]', 'value': 'Add an addendum to a submission.'},
+        {'inline': False, 'name': '/submission addition [message id] [message]', 'value': 'Add an addition to a submission.'},
         {'inline': False, 'name': '/submission clear [message id]', 'value': 'Clear all optional description fields.'},
         {'inline': False, 'name': '/submission remove [message id]', 'value': 'Remove a submission.'}],
     'color': 10158985, 'type': 'rich', 
@@ -35,7 +34,7 @@ submission_embed = {'fields':
 suggestion_embed = {'fields': 
     [{'inline': False, 'name': 'Usage:\n/suggestion main|server [suggestion topic] [description] [optional attachment]', 'value': 'Make a suggestion.'},
         {'inline': False, 'name': '/suggestion add [message id] [message] [mandatory attachment]', 'value': 'Add an attachment to a suggestion.'},
-        {'inline': False, 'name': '/suggestion addendum [message id] [message]', 'value': 'Add an addendum to a suggestion.'},
+        {'inline': False, 'name': '/suggestion addition [message id] [message]', 'value': 'Add an addition to a suggestion.'},
         {'inline': False, 'name': '/suggestion clear [message id]', 'value': 'Clear all optional description fields.'},
         {'inline': False, 'name': '/suggestion remove [message id]', 'value': 'Remove a suggestion.'}],
     'color': 10158985, 'type': 'rich', 

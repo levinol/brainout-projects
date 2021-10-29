@@ -22,7 +22,7 @@ import os
 
 from config import *
 
-client = commands.Bot(command_prefix=settings['prefix'], activity=discord.Activity(type=discord.ActivityType.watching, name='Use '+settings['prefix']+'help if u dumb'))
+client = commands.Bot(command_prefix=settings['prefix'], activity=discord.Activity(type=discord.ActivityType.watching, name='Use '+settings['prefix']+'help'))
 slash = SlashCommand(client, sync_commands=True)
 
 
@@ -30,7 +30,7 @@ token = os.getenv('BOT_TOKEN')
 submit_id = settings['submit_channel']
 submit_final_id = settings['submit_final_channel']
 suggest_id = settings['suggest_channel']
-event_id = settings['event_channel']
+event_id = int(os.getenv('EVENT_CHANNEL_ID'))
 server_id = settings['suggest_server_channel']
 online_id = settings['online_channel']
 embed_channels = [submit_id, submit_final_id, suggest_id, server_id, event_id]
@@ -283,14 +283,14 @@ async def add_file_to_embed(ctx, args, sep_1, sep_2, channel_flag):
             temp_flag = 0
             if 'fields' in embed_dict:
                 for field in embed_dict['fields']:
-                    if field['name'] == "Addendum":
+                    if field['name'] == "Addition":
                         temp_flag = 1
                         field['value'] = message
 
             if temp_flag:
                 embed = Embed.from_dict(embed_dict)
             else:
-                embed.add_field(name="Addendum", value=message, inline = False)
+                embed.add_field(name="Addition", value=message, inline = False)
 
         # FIXME 
         try:
@@ -343,7 +343,7 @@ async def add_file_to_embed(ctx, args, sep_1, sep_2, channel_flag):
         # Delete original message
         await delete_with_react(ctx.message)   
 
-# Add addendum to embed msg 
+# Add addition to embed msg 
 async def add_text_to_embed(ctx, message, message_id, channel_flag):
     # Looking for msg
     msg =  await msg_fetch_slash(ctx, message_id, channel_flag)
@@ -362,7 +362,7 @@ async def add_text_to_embed(ctx, message, message_id, channel_flag):
             temp_flag = 0
             if 'fields' in embed_dict:
                 for field in embed_dict['fields']:
-                    if field['name'] == "Addendum":
+                    if field['name'] == "Addition":
                         temp_flag = 1
                         field['value'] = message
 
@@ -370,7 +370,7 @@ async def add_text_to_embed(ctx, message, message_id, channel_flag):
                 embed = Embed.from_dict(embed_dict)
                 
             else:
-                embed.add_field(name="Addendum", value=message, inline = False)
+                embed.add_field(name="Addition", value=message, inline = False)
 
         # FIXME 
         try:
@@ -382,7 +382,7 @@ async def add_text_to_embed(ctx, message, message_id, channel_flag):
             pass
 
         await msg.edit(embed=embed)
-        await ctx.send('Addendum was replaced', hidden=True) if temp_flag else await ctx.send('Addendum was added', hidden=True)
+        await ctx.send('Addition was replaced', hidden=True) if temp_flag else await ctx.send('Addition was added', hidden=True)
     else:
         await ctx.send(f'{ctx.author.mention}, that\'s not your message 😡')
   
@@ -457,7 +457,7 @@ async def create_embed_with_reactions(ctx, msg_title, msg_desc,channel_id, image
     await dispatched_embed.add_reaction("👎")
     return str(dispatched_embed.id)
 
-# Clear addendum fields if there are no 'role' comments
+# Clear addition fields if there are no 'role' comments
 async def clear_embed(ctx, message_id, channel_flag):
 
     msg =  await msg_fetch_slash(ctx, message_id, channel_flag)
@@ -546,7 +546,7 @@ async def _submission_main(ctx, artwork_name, description=None):
 
     msg_id = await create_embed_with_reactions(ctx, msg_title, msg_desc, submit_id, image_req=True)
 
-    if len(msg_id) < 5:
+    if len(str(msg_id)) < 2:
         await ctx.send(f'{author.mention}, ask helper to update message id of your embed')
     else:
         with conn.cursor() as cursor:
@@ -592,7 +592,7 @@ async def _submission_event(ctx, artwork_name, description=None):
 
     msg_id = await create_embed_with_reactions(ctx, msg_title, msg_desc, event_id, image_req=True)
 
-    if len(msg_id) < 5:
+    if len(str(msg_id)) < 2:
         await ctx.send(f'{author.mention}, ask helper to update message id of your embed')
     else:
         with conn.cursor() as cursor:
@@ -611,12 +611,14 @@ async def submission(ctx, *, args):
     author = ctx.message.author
     if command_type == 'main':
         msg_id = await send_embed_with_file(ctx, args, submit_id, "artwork_name:", "description:", image_req=True)
-        if len(msg_id) < 5:
+        if len(str(msg_id)) < 2:
             await ctx.send(f'{author.mention}, ask helper to update message id of your embed')
         else:
             with conn.cursor() as cursor:
                 conn.autocommit = True
                 cursor.execute(f"INSERT INTO brainout.submissions(author_id, msg_id, in_final) VALUES ({author.id}, {msg_id}, {False})")
+                bot_respond = await ctx.reply(f'{author.mention}, Submission was successfully created')
+            await delete_with_react(bot_respond) if bot_respond else await ctx.reply(f'{author.mention}, Submission was not successfully created')
     elif command_type == 'event':
         if event_id:
             pass
@@ -624,12 +626,14 @@ async def submission(ctx, *, args):
             await ctx.send('No active event')
             return 0
         msg_id = await send_embed_with_file(ctx, args, event_id, "artwork_name:", "description:", image_req=True)
-        if len(msg_id) < 5:
+        if len(str(msg_id)) < 2:
             await ctx.send(f'{author.mention}, ask helper to update message id of your embed')
         else:
             with conn.cursor() as cursor:
                 conn.autocommit = True
                 cursor.execute(f"INSERT INTO brainout.submissions(author_id, msg_id, in_final) VALUES ({author.id}, {msg_id}, {False})")
+                bot_respond = await ctx.reply(f'{author.mention}, Submission was successfully created')
+            await delete_with_react(bot_respond) if bot_respond else await ctx.reply(f'{author.mention}, Submission was not successfully created')
     elif command_type == 'add':
         await add_file_to_embed(ctx, args, "message_id:", "message:", channel_flag="submission")    
     else:
@@ -649,7 +653,7 @@ async def submission(ctx, *, args):
         ),
         create_option(
             name="message",
-            description="Message for addendum field",
+            description="Message for addition field",
             option_type=3,
             required=False
         )
@@ -660,8 +664,8 @@ async def _submission_add(ctx, message_id, message=None):
 
 @slash.subcommand(
     base="submission",
-    name="addendum",
-    description="Add an addendum to a submission", 
+    name="addition",
+    description="Add an addition to a submission", 
     guild_ids=[873835757238894592],
     options=[
         create_option(
@@ -672,13 +676,13 @@ async def _submission_add(ctx, message_id, message=None):
         ),
         create_option(
             name="message",
-            description="Message for addendum field",
+            description="Message for addition field",
             option_type=3,
             required=True
         )
     ]
     )
-async def _submission_addendum(ctx, message_id, message):
+async def _submission_addition(ctx, message_id, message):
     await add_text_to_embed(ctx, message, message_id, channel_flag="submission")
 
 @slash.subcommand(
@@ -760,13 +764,17 @@ async def _suggestion_main(ctx, suggestion_topic, description=None):
         msg_desc = discord.Embed.Empty 
     
     msg_id = await create_embed_with_reactions(ctx, msg_title, msg_desc, suggest_id , image_req=False)
-    if len(msg_id) < 5:
+    if len(str(msg_id)) < 2:
         await ctx.send(f'{author.mention}, ask helper to update message id of your embed')
     else:
+        db_flag = 0
         with conn.cursor() as cursor:
             conn.autocommit = True
             cursor.execute(f"INSERT INTO brainout.suggestions(author_id, msg_id) VALUES ({author.id}, {msg_id})")
-        await ctx.send(f'{author.mention}, provide the files in necessary format wia add command', hidden=True)
+            db_flag = 1
+            await ctx.send(f'Suggestion was successfully created', hidden=True)
+        await ctx.send(f'{author.mention}, provide the files in necessary format wia add command', hidden=True) if db_flag else await ctx.send(f'{author.mention}, Suggestion was not successfully created')
+
 
 
 # suggest command creates embed msg, adding message_id and reactions immediately after creation
@@ -779,21 +787,24 @@ async def suggestion(ctx, *, args):
     author = ctx.message.author
     if command_type == 'main':
         msg_id = await send_embed_with_file(ctx, args, suggest_id, "suggestion_topic:", "description:", image_req=False)
-        if len(msg_id) < 5:
+        if len(str(msg_id)) < 2:
             await ctx.send(f'{author.mention}, ask helper to update message id of your embed')
         else:
             with conn.cursor() as cursor:
                 conn.autocommit = True
                 cursor.execute(f"INSERT INTO brainout.suggestions(author_id, msg_id) VALUES ({author.id}, {msg_id})")
+                bot_respond = await ctx.reply(f'{author.mention}, Suggestion was successfully created')
+            await delete_with_react(bot_respond) if bot_respond else await ctx.reply(f'{author.mention}, Suggestion was not successfully created')
     elif command_type == 'server':
-        msg_id = await send_embed_with_file(ctx, args, server_id,"artwork_name:",  "description:", image_req=False)
-        if len(msg_id) < 5:
+        msg_id = await send_embed_with_file(ctx, args, server_id,"suggestion_topic:",  "description:", image_req=False)
+        if len(str(msg_id)) < 2:
             await ctx.send(f'{author.mention}, ask helper to update message id of your embed')
         else:
             with conn.cursor() as cursor:
                 conn.autocommit = True
                 cursor.execute(f"INSERT INTO brainout.suggestions(author_id, msg_id) VALUES ({author.id}, {msg_id})")
-
+                bot_respond = await ctx.reply(f'{author.mention}, Suggestion was successfully created')
+            await delete_with_react(bot_respond) if bot_respond else await ctx.reply(f'{author.mention}, Suggestion was not successfully created')
     elif command_type == 'add':
         await add_file_to_embed(ctx, args, "message_id:", "message:", channel_flag="suggestion")
     else:
@@ -831,13 +842,16 @@ async def _suggestion_server(ctx, suggestion_topic, description=None):
         msg_desc = discord.Embed.Empty 
 
     msg_id = await create_embed_with_reactions(ctx, msg_title, msg_desc, server_id , image_req=False)
-    if len(msg_id) < 5:
+    if len(str(msg_id)) < 2:
         await ctx.send(f'{author.mention}, ask helper to update message id of your embed')
     else:   
+        db_flag = 0
         with conn.cursor() as cursor:
             conn.autocommit = True
             cursor.execute(f"INSERT INTO brainout.suggestions(author_id, msg_id) VALUES ({author.id}, {msg_id})")
-        await ctx.send(f'{author.mention}, provide the files in necessary format wia add command', hidden=True)
+            db_flag = 1
+            await ctx.send(f'Suggestion was successfully created', hidden=True)
+        await ctx.send(f'{author.mention}, provide the files in necessary format wia add command', hidden=True) if db_flag else await ctx.send(f'{author.mention}, Suggestion was not successfully created')
 
 
 @slash.subcommand(
@@ -854,7 +868,7 @@ async def _suggestion_server(ctx, suggestion_topic, description=None):
         ),
         create_option(
             name="message",
-            description="Message for addendum field",
+            description="Message for addition field",
             option_type=3,
             required=False
         )
@@ -865,8 +879,8 @@ async def _suggestion_add(ctx, message_id, message):
 
 @slash.subcommand(
     base="suggestion",
-    name="addendum",
-    description="Add an addendum to a suggestion", 
+    name="addition",
+    description="Add an addition to a suggestion", 
     guild_ids=[873835757238894592],
     options=[
         create_option(
@@ -877,13 +891,13 @@ async def _suggestion_add(ctx, message_id, message):
         ),
         create_option(
             name="message",
-            description="Message for addendum field",
+            description="Message for addition field",
             option_type=3,
             required=True
         )
     ]
     )
-async def _suggestion_addendum(ctx, message_id, message):
+async def _suggestion_addition(ctx, message_id, message):
     await add_text_to_embed(ctx, message, message_id, channel_flag="suggestion")
 
 @slash.subcommand(
