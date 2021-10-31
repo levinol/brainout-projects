@@ -43,7 +43,8 @@ suggestion_embed = {'fields':
 
 help_embed = {'fields': 
     [{'inline': False, 'name': 'Usage:\nFor submission commands usage', 'value': 'Please select `\'Submission\' commands`'},
-     {'inline': True, 'name': 'For suggestion commands usage', 'value': 'Please select `\'Suggestion\' commands`'}],
+     {'inline': False, 'name': 'For suggestion commands usage', 'value': 'Please select `\'Suggestion\' commands`'},
+     {'inline': False, 'name': 'If you do not know where to get the message_id', 'value': 'Please select `How to get message_id`'}],
       'color': 4521728, 'type': 'rich',
       'description': 'The bot is designed to create and manage game suggestions/submissions', 
       'title': 'Help page'}
@@ -51,5 +52,11 @@ help_embed = {'fields':
 help_embed_slash_disabled = {'fields': 
     [{'inline': False, 'name': 'Usage:\n', 'value': 'If you see this help page, then you have disabled slash commands. To use commands, enable them in the settings.'}],
       'color': 4521728, 'type': 'rich',
+      'description': 'The bot is designed to create and manage game suggestions/submissions', 
+      'title': 'Help page'}
+
+message_id_embed = {'fields': 
+    [{'inline': False, 'name': 'Usage:\n', 'value': 'To get an ID of message, copy its number from the embed footer'}],
+      'color': 10158985, 'type': 'rich',
       'description': 'The bot is designed to create and manage game suggestions/submissions', 
       'title': 'Help page'}

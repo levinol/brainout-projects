@@ -5,6 +5,7 @@ from discord import activity
 from discord import role
 from discord.channel import VoiceChannel
 from discord.embeds import Embed, EmptyEmbed
+from discord.emoji import Emoji
 from discord.ext import commands
 from discord.flags import PublicUserFlags
 from discord.utils import get
@@ -39,7 +40,11 @@ subm_embed = Embed.from_dict(submission_embed)
 sugst_embed = Embed.from_dict(suggestion_embed)
 help_emb = Embed.from_dict(help_embed)
 help_emb_disabled = Embed.from_dict(help_embed_slash_disabled)
+message_id_emb = Embed.from_dict(message_id_embed)
 
+positive_emoji_id = int(os.getenv('POSITIVE_REACTION_EMOJI_ID'))
+neutral_emoji_id = int(os.getenv('NEUTRAL_REACTION_EMOJI_ID'))
+negative_emoji_id = int(os.getenv('NEGATIVE_REACTION_EMOJI_ID'))
 
 import psycopg2
 
@@ -69,8 +74,12 @@ async def help(ctx, task_typo=None):
         await ctx.send(embed=sugst_embed)
     elif task_typo == "submission":
         await ctx.send(embed=subm_embed)
+    elif task_typo == "message_id":
+        message_id_file = discord.File("message_id.gif", filename="message_id.gif")
+        await ctx.send(file=message_id_file, embed=message_id_emb.set_image(url="attachment://message_id.gif"))
     else:
-        await ctx.send(embed=help_emb_disabled)
+        slash_on = discord.File("slash_on.gif", filename="slash_on.gif")
+        await ctx.send(file=slash_on, embed=help_emb_disabled.set_image(url="attachment://slash_on.gif"))
     await delete_with_react(ctx.message)
 
 import requests
@@ -106,8 +115,12 @@ async def reaction_count(payload):
     if payload.channel_id in embed_channels:
         submit_channel =client.get_channel(payload.channel_id)
         msg = await submit_channel.fetch_message(payload.message_id)
-        react1 = get(msg.reactions, emoji="👍")
-        react2 = get(msg.reactions, emoji="👎")
+
+        positive_emoji = client.get_emoji(id=positive_emoji_id)
+        react1 = get(msg.reactions, emoji=positive_emoji)
+
+        negative_emoji = client.get_emoji(id=negative_emoji_id)
+        react2 = get(msg.reactions, emoji=negative_emoji)
         embed = msg.embeds[0]
 
         react1 = react1.count
@@ -138,13 +151,19 @@ async def reaction_count(payload):
                     embed.set_footer(text='Message ID: '+ str(dispatched_embed.id))
 
                     await dispatched_embed.edit(embed=embed)
-                    await dispatched_embed.add_reaction("👍")
-                    await dispatched_embed.add_reaction("👎")   
+
+                    positive_emoji = client.get_emoji(id=positive_emoji_id)
+                    await dispatched_embed.add_reaction(positive_emoji)
+
+                    neutral_emoji = client.get_emoji(id=neutral_emoji_id)
+                    await dispatched_embed.add_reaction(neutral_emoji)
+
+                    negative_emoji = client.get_emoji(id=negative_emoji_id)
+                    await dispatched_embed.add_reaction(negative_emoji)   
         elif react2 > 2:
             # delete 
             # TODO think about it
             embed.colour = 0xFF0000
-            await delete_with_react(msg)
         elif react1 > react2:
             embed.colour = 0x228B22
         elif react1 == react2:
@@ -208,6 +227,7 @@ help_select = create_select(
     options=[# the options in your dropdown
          create_select_option("'Submission' commands", value="submission", emoji="🙈"),
         create_select_option("'Suggestion' commands", value="suggestion", emoji="🙉"),
+        create_select_option("How to get message_id", value="message_id", emoji="🙊"),
     ],
     placeholder="Choose your help page",  # the placeholder text to show when no options have been chosen
     min_values=1,  # the minimum number of options a user must select
@@ -229,6 +249,9 @@ async def on_component(ctx):
         await ctx.send(embed=sugst_embed, hidden=True)
     elif ctx.selected_options[0] == "submission":
         await ctx.send(embed=subm_embed, hidden=True)
+    elif ctx.selected_options[0] == "message_id":
+        message_id_file = discord.File("message_id.gif", filename="message_id.gif")
+        await ctx.send(file=message_id_file, embed=message_id_emb.set_image(url="attachment://message_id.gif"), hidden=True)
     else:
         await ctx.send('uhhh im stuck')
 
@@ -453,8 +476,16 @@ async def create_embed_with_reactions(ctx, msg_title, msg_desc,channel_id, image
     embed.set_footer(text='Message ID: '+ str(dispatched_embed.id))
 
     await dispatched_embed.edit(embed=embed)
-    await dispatched_embed.add_reaction("👍")
-    await dispatched_embed.add_reaction("👎")
+
+    positive_emoji = client.get_emoji(id=positive_emoji_id)
+    await dispatched_embed.add_reaction(positive_emoji)
+
+    neutral_emoji = client.get_emoji(id=neutral_emoji_id)
+    await dispatched_embed.add_reaction(neutral_emoji)
+
+    negative_emoji = client.get_emoji(id=negative_emoji_id)
+    await dispatched_embed.add_reaction(negative_emoji) 
+
     return str(dispatched_embed.id)
 
 # Clear addition fields if there are no 'role' comments
@@ -1027,5 +1058,6 @@ async def _bottools_reset_final_flag(ctx, message_id):
         cursor.execute("UPDATE brainout.submissions SET in_final = %s WHERE msg_id = %s", (False, message_id,))
     await ctx.send('Final flag was reset', hidden=True)
 
-#OnlinePlayersUpdate.start()
-client.run(token)
+if __name__ == "__main__":
+    #OnlinePlayersUpdate.start()
+    client.run(token)
