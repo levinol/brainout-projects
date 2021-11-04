@@ -21,6 +21,8 @@ roles = {
     "dev": 873835757276655682
 }
 
+dumb_emoji_dict = {'dev': '👨‍💻Dev', 'designers':'👨‍🎨Designer', 'admin': '🛌Admin', 'moderator': '👨‍⚖️Mod', 'helper': '🦸‍♂️Helper' }
+
 submission_embed = {'fields': 
     [{'inline': False, 'name': 'Usage:\n/submission main [artwork name] [description] [mandatory attachment]', 'value': 'Make a submission.'},
         {'inline': False, 'name': '/submission add [message id] [message] [mandatory attachment]', 'value': 'Add an attachment to a submission.'},

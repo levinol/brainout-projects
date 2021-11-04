@@ -36,6 +36,8 @@ server_id = settings['suggest_server_channel']
 online_id = settings['online_channel']
 embed_channels = [submit_id, submit_final_id, suggest_id, server_id, event_id]
 
+botgate_id = 873900855676526643
+
 subm_embed = Embed.from_dict(submission_embed)
 sugst_embed = Embed.from_dict(suggestion_embed)
 help_emb = Embed.from_dict(help_embed)
@@ -56,7 +58,6 @@ def author_id_check(msg_id: str, author_id: str, channel_type: str) -> bool:
     is_author_flag = False
     with conn.cursor() as cursor:
         conn.autocommit = True
-        print(channel_type)
         if channel_type == 'submission':
             cursor.execute("SELECT author_id FROM brainout.submissions WHERE msg_id = %s", (msg_id,))
         elif channel_type == 'suggestion':
@@ -70,6 +71,11 @@ def author_id_check(msg_id: str, author_id: str, channel_type: str) -> bool:
 @client.remove_command('help')
 @client.command()
 async def help(ctx, task_typo=None):
+    if ctx.channel.id != botgate_id:
+        bot_respond = await ctx.send(f'{ctx.message.author.mention}, this command works only in <#{botgate_id}> channel')
+        await delete_with_react(bot_respond)
+        await delete_with_react(ctx.message)
+        return None
     if task_typo == "suggestion":
         await ctx.send(embed=sugst_embed)
     elif task_typo == "submission":
@@ -89,10 +95,7 @@ from discord.ext import tasks
 @tasks.loop(minutes=10)
 async def OnlinePlayersUpdate():
     VoiceChannel = await client.fetch_channel(online_id)
-
-    print(VoiceChannel)
     r=requests.get(update_url)
-    print(r)
     await VoiceChannel.edit(name=f"Online: {r.json()['players']}")
 
 # Add comment to embed msg (ahaha these code comments are so helpfull)
@@ -109,6 +112,23 @@ async def delete_with_react(msg):
     await msg.add_reaction("🚮")
     await msg.delete(delay=7)
 
+# Clear comment section
+def clear_comments(embed_message):
+    embed_dict = embed_message.to_dict()
+
+    if 'fields' in embed_dict:
+        mode_array = dumb_emoji_dict.values()
+        
+        # Ughh so this is one-line for inside one-line for if
+        # This code check if field in embed msg is comment and doent include it to final embed msg 
+        new_fields = [field for field in embed_dict['fields'] if not field['name'].startswith(tuple([f'❗{mode} comment' for mode in mode_array]))]
+        
+        print(new_fields)
+
+        embed_dict['fields'] = new_fields
+    
+    return Embed.from_dict(embed_dict)
+
 
 # Change embed color due to reacts count
 async def reaction_count(payload):
@@ -121,14 +141,14 @@ async def reaction_count(payload):
 
         negative_emoji = client.get_emoji(id=negative_emoji_id)
         react2 = get(msg.reactions, emoji=negative_emoji)
-        embed = msg.embeds[0]
+        embed_from_msg = msg.embeds[0]
 
         react1 = react1.count
         react2 = react2.count
 
         if react1 > 2 and react2 < 2:
             #Move to final if paylod == submission channel id
-            embed.colour = 0x3CB371
+            embed_from_msg.colour = 0x3CB371
 
             if payload.channel_id == submit_id:
                 with conn.cursor() as cursor:
@@ -146,32 +166,38 @@ async def reaction_count(payload):
 
                     delivery_channel = client.get_channel(submit_final_id)
 
-                    dispatched_embed = await delivery_channel.send(embed=embed)
+                    dispatched_embed = embed_from_msg.copy()
+                    
+                    dispatched_embed = clear_comments(dispatched_embed)
 
-                    embed.set_footer(text='Message ID: '+ str(dispatched_embed.id))
+                    dispatched_embed_msg = await delivery_channel.send(embed=dispatched_embed)
 
-                    await dispatched_embed.edit(embed=embed)
+                    dispatched_embed.set_footer(text='Message ID: '+ str(dispatched_embed_msg.id))
+
+                    dispatched_embed.add_field(name='Link to primary message:', inline=False, value=f'[Link to message in <#{submit_id}>]({msg.jump_url})')
+
+                    await dispatched_embed_msg.edit(embed=dispatched_embed)
 
                     positive_emoji = client.get_emoji(id=positive_emoji_id)
-                    await dispatched_embed.add_reaction(positive_emoji)
+                    await dispatched_embed_msg.add_reaction(positive_emoji)
 
                     neutral_emoji = client.get_emoji(id=neutral_emoji_id)
-                    await dispatched_embed.add_reaction(neutral_emoji)
+                    await dispatched_embed_msg.add_reaction(neutral_emoji)
 
                     negative_emoji = client.get_emoji(id=negative_emoji_id)
-                    await dispatched_embed.add_reaction(negative_emoji)   
+                    await dispatched_embed_msg.add_reaction(negative_emoji)   
         elif react2 > 2:
             # delete 
             # TODO think about it
-            embed.colour = 0xFF0000
+            embed_from_msg.colour = 0xFF0000
         elif react1 > react2:
-            embed.colour = 0x228B22
+            embed_from_msg.colour = 0x228B22
         elif react1 == react2:
-            embed.colour = 0xFFFFFF 
+            embed_from_msg.colour = 0xFFFFFF 
         else:
-            embed.colour = 0xFF8C00
+            embed_from_msg.colour = 0xFF8C00
 
-        await msg.edit(embed=embed)
+        await msg.edit(embed=embed_from_msg)
 
 # Event handlers for embed reacts count
 @client.event
@@ -197,21 +223,12 @@ async def on_message(message):
             for r in message.author.roles:
                 roles_ids.append(r.id)
 
-            # Govnokod // pls review it later
-            # FIXME
-
-            if roles['dev'] in roles_ids:
-                await add_сomment(message,'👨‍💻Dev')
-            elif roles['designers'] in roles_ids:
-                await add_сomment(message,'👨‍🎨Designer')
-            elif roles['admin'] in roles_ids:
-                await add_сomment(message,'🛌Admin')
-            elif roles['moderator'] in roles_ids:
-                await add_сomment(message,'👨‍⚖️Mod')
-            elif roles['helper'] in roles_ids:
-                await add_сomment(message,'🦸‍♂️Helper')
-            else:
-                await submit_channel.send("Yo, where is your roles")
+            
+            
+            for role, mode in dumb_emoji_dict.items():
+                if roles[role] in roles_ids:
+                    await add_сomment(message, mode)
+                    break
             
             # Delete reply
             await message.delete()
@@ -239,7 +256,10 @@ help_select = create_select(
     description="Get help page",
     guild_ids=[873835757238894592]
 )
-async def _hello(ctx): 
+async def _help(ctx):
+    if ctx.channel_id != botgate_id:
+        await ctx.send(f'This slash command works only in <#{botgate_id}> channel', hidden=True)
+        return None
     await ctx.send(embed=help_emb, components=[create_actionrow(help_select)])
 
 @client.event
@@ -331,7 +351,6 @@ async def add_file_to_embed(ctx, args, sep_1, sep_2, channel_flag):
 
             if field_values:
                 # Get current buttons from msg
-                print(field_values)
                 url_buttons = []
                 for url_iterator in field_values.split('\n'):
                     url_buttons.append(create_button(
@@ -540,6 +559,9 @@ async def _hello(ctx:SlashContext):
         url='https://brainout.org/'
         ),
         ]
+    if ctx.channel_id != botgate_id:
+        await ctx.send(f'This slash command works only in <#{botgate_id}> channel', hidden=True)
+        return None
     msg = await ctx.send(f'Hello, {ctx.author.mention}!')
     await msg.edit(components=[create_actionrow(*url_bottons)])
 
@@ -565,6 +587,9 @@ async def _hello(ctx:SlashContext):
     ]
     )
 async def _submission_main(ctx, artwork_name, description=None):
+    if ctx.channel_id != botgate_id:
+        await ctx.send(f'This slash command works only in <#{botgate_id}> channel', hidden=True)
+        return None
     author = ctx.author
     
     #Divide into title and desc
@@ -606,6 +631,10 @@ async def _submission_main(ctx, artwork_name, description=None):
     ]
     )
 async def _submission_event(ctx, artwork_name, description=None):
+    if ctx.channel_id != botgate_id:
+        await ctx.send(f'This slash command works only in <#{botgate_id}> channel', hidden=True)
+        return None
+    
     if event_id:
         pass
     else:
@@ -636,6 +665,11 @@ async def _submission_event(ctx, artwork_name, description=None):
 # _submission_add command with attached image
 @client.command()
 async def submission(ctx, *, args): 
+    if ctx.channel.id != botgate_id:
+        bot_respond = await ctx.send(f'{ctx.message.author.mention}, this command works only in <#{botgate_id}> channel')
+        await delete_with_react(bot_respond)
+        await delete_with_react(ctx.message)
+        return None
     command_type, args=args.split(' ',1)
     print(command_type, args)
     msg = args
@@ -691,6 +725,9 @@ async def submission(ctx, *, args):
     ]
     )
 async def _submission_add(ctx, message_id, message=None):
+    if ctx.channel_id != botgate_id:
+        await ctx.send(f'This slash command works only in <#{botgate_id}> channel', hidden=True)
+        return None
     await add_text_to_embed(ctx, message, message_id, channel_flag="submission")
 
 @slash.subcommand(
@@ -714,6 +751,9 @@ async def _submission_add(ctx, message_id, message=None):
     ]
     )
 async def _submission_addition(ctx, message_id, message):
+    if ctx.channel_id != botgate_id:
+        await ctx.send(f'This slash command works only in <#{botgate_id}> channel', hidden=True)
+        return None
     await add_text_to_embed(ctx, message, message_id, channel_flag="submission")
 
 @slash.subcommand(
@@ -731,6 +771,9 @@ async def _submission_addition(ctx, message_id, message):
     ]
     )
 async def _submission_clear(ctx, message_id):
+    if ctx.channel_id != botgate_id:
+        await ctx.send(f'This slash command works only in <#{botgate_id}> channel', hidden=True)
+        return None
     await clear_embed(ctx, message_id, "submission")
 
 @slash.subcommand(
@@ -748,6 +791,9 @@ async def _submission_clear(ctx, message_id):
     ]
     )
 async def _submission_remove(ctx, message_id):
+    if ctx.channel_id != botgate_id:
+        await ctx.send(f'This slash command works only in <#{botgate_id}> channel', hidden=True)
+        return None
 
     msg =  await msg_fetch_slash(ctx, message_id, "submission")
     if msg == 0:
@@ -783,7 +829,10 @@ async def _submission_remove(ctx, message_id):
     ]
     )
 async def _suggestion_main(ctx, suggestion_topic, description=None):
-    
+    if ctx.channel_id != botgate_id:
+        await ctx.send(f'This slash command works only in <#{botgate_id}> channel', hidden=True)
+        return None
+
     author = ctx.author
     
     # Divide into title and desc
@@ -812,6 +861,12 @@ async def _suggestion_main(ctx, suggestion_topic, description=None):
 # _suggestion_main command with attached image
 @client.command()
 async def suggestion(ctx, *, args): 
+    if ctx.channel.id != botgate_id:
+        bot_respond = await ctx.send(f'{ctx.message.author.mention}, this command works only in <#{botgate_id}> channel')
+        await delete_with_react(bot_respond)
+        await delete_with_react(ctx.message)
+        return None
+    
     command_type, args=args.split(' ',1)
     print(command_type, args)
     msg = args
@@ -862,6 +917,10 @@ async def suggestion(ctx, *, args):
     ]
     )
 async def _suggestion_server(ctx, suggestion_topic, description=None):
+    if ctx.channel_id != botgate_id:
+        await ctx.send(f'This slash command works only in <#{botgate_id}> channel', hidden=True)
+        return None
+
     author = ctx.author
     
     # Divide into title and desc
@@ -906,6 +965,9 @@ async def _suggestion_server(ctx, suggestion_topic, description=None):
     ]
     )
 async def _suggestion_add(ctx, message_id, message):
+    if ctx.channel_id != botgate_id:
+        await ctx.send(f'This slash command works only in <#{botgate_id}> channel', hidden=True)
+        return None
     await add_text_to_embed(ctx, message, message_id, channel_flag="suggestion")
 
 @slash.subcommand(
@@ -929,6 +991,10 @@ async def _suggestion_add(ctx, message_id, message):
     ]
     )
 async def _suggestion_addition(ctx, message_id, message):
+    if ctx.channel_id != botgate_id:
+        await ctx.send(f'This slash command works only in <#{botgate_id}> channel', hidden=True)
+        return None
+
     await add_text_to_embed(ctx, message, message_id, channel_flag="suggestion")
 
 @slash.subcommand(
@@ -946,6 +1012,10 @@ async def _suggestion_addition(ctx, message_id, message):
     ]
     )
 async def _suggestion_clear(ctx, message_id):
+    if ctx.channel_id != botgate_id:
+        await ctx.send(f'This slash command works only in <#{botgate_id}> channel', hidden=True)
+        return None
+
     await clear_embed(ctx, message_id, "suggestion")
 
 @slash.subcommand(
@@ -963,6 +1033,9 @@ async def _suggestion_clear(ctx, message_id):
     ]
     )
 async def _suggestion_remove(ctx, message_id):
+    if ctx.channel_id != botgate_id:
+        await ctx.send(f'This slash command works only in <#{botgate_id}> channel', hidden=True)
+        return None
 
     msg =  await msg_fetch_slash(ctx, message_id, "suggestion")
     if msg == 0:
@@ -988,7 +1061,7 @@ from discord_slash.model import SlashCommandPermissionType
     options=[
         create_option(
             name="message_id",
-            description="Copy message id from suggestion",
+            description="Copy message id",
             option_type=3,
             required=True
         ),
@@ -1015,7 +1088,6 @@ from discord_slash.model import SlashCommandPermissionType
             create_permission(roles['helper'], SlashCommandPermissionType.ROLE, True),
             create_permission(roles['moderator'], SlashCommandPermissionType.ROLE, True),
             create_permission(roles['admin'], SlashCommandPermissionType.ROLE, True),
-            create_permission(roles['dev'], SlashCommandPermissionType.ROLE, True)
         ]
     }
     )
@@ -1040,7 +1112,6 @@ async def _bottools_update_msg_id(ctx, message_id, channel_flag):
             create_permission(roles['helper'], SlashCommandPermissionType.ROLE, True),
             create_permission(roles['moderator'], SlashCommandPermissionType.ROLE, True),
             create_permission(roles['admin'], SlashCommandPermissionType.ROLE, True),
-            create_permission(roles['dev'], SlashCommandPermissionType.ROLE, True)
         ]
     },
     options=[
@@ -1057,6 +1128,56 @@ async def _bottools_reset_final_flag(ctx, message_id):
         conn.autocommit = True
         cursor.execute("UPDATE brainout.submissions SET in_final = %s WHERE msg_id = %s", (False, message_id,))
     await ctx.send('Final flag was reset', hidden=True)
+
+@slash.subcommand(
+    base="bottools",
+    name="clear_comments",
+    description="Wow this command clear comments", 
+    guild_ids=[873835757238894592],
+    options=[
+        create_option(
+            name="message_id",
+            description="Copy message id",
+            option_type=3,
+            required=True
+        ),
+        create_option(
+            name="channel_flag",
+            description="Original msg channel",
+            option_type=3,
+            required=True,
+            choices=[
+                  create_choice(
+                    name="msg in sumbission channel",
+                    value="submission"
+                  ),
+                  create_choice(
+                    name="msg in suggestion channel",
+                    value="suggestion"
+                  )
+            ]
+        )
+    ],
+    base_default_permission=False,
+    base_permissions={
+        873835757238894592: [
+            create_permission(roles['helper'], SlashCommandPermissionType.ROLE, True),
+            create_permission(roles['moderator'], SlashCommandPermissionType.ROLE, True),
+            create_permission(roles['admin'], SlashCommandPermissionType.ROLE, True),
+        ]
+    }
+    )
+async def _bottools_clear_comments(ctx, message_id, channel_flag):
+    msg= await msg_fetch_slash(ctx, message_id, channel_flag)
+    if msg:
+        msg_embed = msg.embeds[0]
+        msg_embed = clear_comments(msg_embed)
+
+        await msg.edit(embed=msg_embed)
+        await ctx.send('Comments cleared', hidden=True)
+    else:
+        await ctx.send('Can\'t find the message', hidden=True)
+
 
 if __name__ == "__main__":
     #OnlinePlayersUpdate.start()
