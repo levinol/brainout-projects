@@ -7,7 +7,7 @@ settings = {
     'submit_final_channel': 404334846026973194,
     'suggest_channel': 821103535982379028,
     'suggest_server_channel': 829067982239039554,
-    'online_channel': 906470596085432341
+    'online_channel': 906499690000965652
 }
 
 update_url = r'https://game-vgold.brainout.org/status'

@@ -97,7 +97,7 @@ from discord.ext import tasks
 # Get current online of brain/out 
 @tasks.loop(minutes=10)
 async def OnlinePlayersUpdate():
-    VoiceChannel = await client.fetch_channel(online_id)
+    VoiceChannel = await client.fetch_channel(int(online_id))
     r=requests.get(update_url)
     await VoiceChannel.edit(name=f"Online: {r.json()['players']}")
 
@@ -1125,7 +1125,7 @@ from discord_slash.model import SlashCommandPermissionType
     ],
     base_default_permission=False,
     base_permissions={
-        873835757238894592: [
+        285492131433283595: [
             create_permission(roles['helper'], SlashCommandPermissionType.ROLE, True),
             create_permission(roles['moderator'], SlashCommandPermissionType.ROLE, True),
             create_permission(roles['admin'], SlashCommandPermissionType.ROLE, True),
@@ -1149,7 +1149,7 @@ async def _bottools_update_msg_id(ctx, message_id, channel_flag):
     guild_ids=[285492131433283595],
     base_default_permission=False,
     base_permissions={
-        873835757238894592: [
+        285492131433283595: [
             create_permission(roles['helper'], SlashCommandPermissionType.ROLE, True),
             create_permission(roles['moderator'], SlashCommandPermissionType.ROLE, True),
             create_permission(roles['admin'], SlashCommandPermissionType.ROLE, True),
@@ -1201,7 +1201,7 @@ async def _bottools_reset_final_flag(ctx, message_id):
     ],
     base_default_permission=False,
     base_permissions={
-        873835757238894592: [
+        285492131433283595: [
             create_permission(roles['helper'], SlashCommandPermissionType.ROLE, True),
             create_permission(roles['moderator'], SlashCommandPermissionType.ROLE, True),
             create_permission(roles['admin'], SlashCommandPermissionType.ROLE, True),
