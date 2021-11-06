@@ -25,7 +25,7 @@ import os
 
 from config import *
 
-client = commands.Bot(command_prefix=settings['prefix'], activity=discord.Activity(type=discord.ActivityType.watching, name='Use '+settings['prefix']+'help'))
+client = commands.Bot(command_prefix=settings['prefix'], activity=discord.Activity(type=discord.ActivityType.watching, name='Use '+settings['prefix']+'help in content-botgate channel'))
 slash = SlashCommand(client, sync_commands=True)
 
 
@@ -263,6 +263,9 @@ async def on_message(message):
 async def on_raw_message_delete(payload):
     if payload.channel_id in [submit_id, event_id, submit_final_id, suggest_id, server_id]: # обрабатываем сообщения в каналах sumbit_channel
         
+        if payload.cashed_message.id != 848518443926028288:
+            return None
+
         if  payload.channel_id in [submit_id, submit_final_id, event_id]:
             channel_type = 'submission' 
         elif payload.channel_id in [suggest_id, server_id]:
@@ -580,16 +583,7 @@ async def clear_embed(ctx, message_id, channel_flag):
                     temp_flag = 1
 
         if temp_flag:
-                #role check
-            roles_ids = []
-            for r in ctx.author.roles:
-                roles_ids.append(r.id)
-
-            if set(roles.values()).intersection(set(roles_ids)):
-                embed.clear_fields()
-                await msg.edit(embed=embed)
-            else:
-                await ctx.send(f"{ctx.author.mention}, the message contains someone else's comment, I cannot clear it", hidden=True)
+            await ctx.send(f"{ctx.author.mention}, the message contains someone else's comment, I cannot clear it", hidden=True)
         else:
             embed.clear_fields()
             await msg.edit(embed=embed)
@@ -1069,7 +1063,7 @@ async def _suggestion_clear(ctx, message_id):
         await ctx.send(f'This slash command works only in <#{botgate_id}> channel', hidden=True)
         return None
 
-    await clear_embed(ctx, message_id, "suggestion")
+    await clear_embed(ctx, message_id, "suggestion")  
 
 @slash.subcommand(
     base="suggestion",
