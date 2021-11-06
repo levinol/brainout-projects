@@ -1,24 +1,23 @@
 settings = {
     'bot': 'Brain/out bot',
     'id': 2546,
+    'profile_id': 848518443926028288,
     'prefix': '/',
-    'submit_desc_channel': 873835758098718800,
-    'submit_channel': 873835757926756381,
-    'submit_final_channel': 873835757926756380,
-    'suggest_desc_channel': 873900855676526643,
-    'suggest_channel': 873835758098718802,
-    'suggest_server_channel': 873835758098718803,
-    'online_channel': 893602540481044570 
+    'submit_channel': 404334763957288970,
+    'submit_final_channel': 404334846026973194,
+    'suggest_channel': 821103535982379028,
+    'suggest_server_channel': 829067982239039554,
+    'online_channel': 906470596085432341
 }
 
-update_url = r'link'
+update_url = r'https://game-vgold.brainout.org/status'
 
 roles = {
-    "helper": 873835757276655679,
-    "moderator": 873835757276655680,
-    "admin": 873835757276655681,
-    "designers": 878059187479908402,
-    "dev": 873835757276655682
+    "helper": 298060949053767701,
+    "moderator": 287659705860358144,
+    "admin": 285497610100277258,
+    "designers": 906472351368105984,
+    "dev": 285496926470668288
 }
 
 dumb_emoji_dict = {'dev': '👨‍💻Dev', 'designers':'👨‍🎨Designer', 'admin': '🛌Admin', 'moderator': '👨‍⚖️Mod', 'helper': '🦸‍♂️Helper' }

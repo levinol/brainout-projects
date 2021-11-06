@@ -38,7 +38,7 @@ server_id = settings['suggest_server_channel']
 online_id = settings['online_channel']
 embed_channels = [submit_id, submit_final_id, suggest_id, server_id, event_id]
 
-botgate_id = 873900855676526643
+botgate_id = os.getenv('BOTGATE_CHANNEL')
 
 subm_embed = Embed.from_dict(submission_embed)
 sugst_embed = Embed.from_dict(suggestion_embed)
@@ -171,7 +171,7 @@ async def reaction_count(payload):
         react1 = react1.count
         react2 = react2.count
 
-        if react1 > 2 and react2 < 2:
+        if react1 >= 50 and react2 <= 20:
             #Move to final if paylod == submission channel id
             embed_from_msg.colour = 0x3CB371
 
@@ -211,9 +211,7 @@ async def reaction_count(payload):
 
                     negative_emoji = client.get_emoji(id=negative_emoji_id)
                     await dispatched_embed_msg.add_reaction(negative_emoji)   
-        elif react2 > 2:
-            # delete 
-            # TODO think about it
+        elif react2 >= 20:
             embed_from_msg.colour = 0xFF0000
         elif react1 > react2:
             embed_from_msg.colour = 0x228B22
@@ -263,7 +261,7 @@ async def on_message(message):
 async def on_raw_message_delete(payload):
     if payload.channel_id in [submit_id, event_id, submit_final_id, suggest_id, server_id]: # обрабатываем сообщения в каналах sumbit_channel
         
-        if payload.cashed_message.id != 848518443926028288:
+        if payload.cashed_message.id != settings['profile_id']:
             return None
 
         if  payload.channel_id in [submit_id, submit_final_id, event_id]:
@@ -310,7 +308,7 @@ help_select = create_select(
 @slash.slash(
     name="help",
     description="Get help page",
-    guild_ids=[873835757238894592]
+    guild_ids=[285492131433283595]
 )
 async def _help(ctx):
     if ctx.channel_id != botgate_id:
@@ -594,30 +592,12 @@ async def clear_embed(ctx, message_id, channel_flag):
 
 from discord_slash.model import ButtonStyle
 
-@slash.slash(
-    name="hello",
-    description="Say hello to botti",
-    guild_ids=[873835757238894592]
-)
-async def _hello(ctx:SlashContext): 
-    url_bottons = [create_button(
-        style=ButtonStyle.URL,
-        label="Press to spend all ur moneybags",
-        url='https://brainout.org/'
-        ),
-        ]
-    if ctx.channel_id != botgate_id:
-        await ctx.send(f'This slash command works only in <#{botgate_id}> channel', hidden=True)
-        return None
-    msg = await ctx.send(f'Hello, {ctx.author.mention}!')
-    await msg.edit(components=[create_actionrow(*url_bottons)])
-
 # submission part
 @slash.subcommand(
     base="submission",
     name="main", 
     description="Make a submission in main channel", 
-    guild_ids=[873835757238894592],
+    guild_ids=[285492131433283595],
     options=[
         create_option(
             name="artwork_name",
@@ -661,7 +641,7 @@ async def _submission_main(ctx, artwork_name, description=None):
     base="submission",
     name="event", 
     description="Make a submission in event channel", 
-    guild_ids=[873835757238894592],
+    guild_ids=[285492131433283595],
     options=[
         create_option(
             name="artwork_name",
@@ -755,7 +735,7 @@ async def submission(ctx, *, args):
     base="submission",
     name="add",
     description="Add an attachment to a submission", 
-    guild_ids=[873835757238894592],
+    guild_ids=[285492131433283595],
     options=[
         create_option(
             name="message_id",
@@ -781,7 +761,7 @@ async def _submission_add(ctx, message_id, message=None):
     base="submission",
     name="addition",
     description="Add an addition to a submission", 
-    guild_ids=[873835757238894592],
+    guild_ids=[285492131433283595],
     options=[
         create_option(
             name="message_id",
@@ -807,7 +787,7 @@ async def _submission_addition(ctx, message_id, message):
     base="submission",
     name="сlear",
     description="Clear all optional description fields", 
-    guild_ids=[873835757238894592],
+    guild_ids=[285492131433283595],
     options=[
         create_option(
             name="message_id",
@@ -827,7 +807,7 @@ async def _submission_clear(ctx, message_id):
     base="submission",
     name="remove",
     description="Remove a submission", 
-    guild_ids=[873835757238894592],
+    guild_ids=[285492131433283595],
     options=[
         create_option(
             name="message_id",
@@ -859,7 +839,7 @@ async def _submission_remove(ctx, message_id):
     base="suggestion",
     name="main", 
     description="Make a suggestion in main channel", 
-    guild_ids=[873835757238894592],
+    guild_ids=[285492131433283595],
     options=[
         create_option(
             name="suggestion_topic",
@@ -947,7 +927,7 @@ async def suggestion(ctx, *, args):
     base="suggestion",
     name="server",
     description="Make a suggestion in event channel", 
-    guild_ids=[873835757238894592],
+    guild_ids=[285492131433283595],
     options=[
         create_option(
             name="suggestion_topic",
@@ -995,7 +975,7 @@ async def _suggestion_server(ctx, suggestion_topic, description=None):
     base="suggestion",
     name="add",
     description="Add an attachment to a suggestion", 
-    guild_ids=[873835757238894592],
+    guild_ids=[285492131433283595],
     options=[
         create_option(
             name="message_id",
@@ -1021,7 +1001,7 @@ async def _suggestion_add(ctx, message_id, message):
     base="suggestion",
     name="addition",
     description="Add an addition to a suggestion", 
-    guild_ids=[873835757238894592],
+    guild_ids=[285492131433283595],
     options=[
         create_option(
             name="message_id",
@@ -1048,7 +1028,7 @@ async def _suggestion_addition(ctx, message_id, message):
     base="suggestion",
     name="сlear",
     description="Clear all optional description fields", 
-    guild_ids=[873835757238894592],
+    guild_ids=[285492131433283595],
     options=[
         create_option(
             name="message_id",
@@ -1069,7 +1049,7 @@ async def _suggestion_clear(ctx, message_id):
     base="suggestion",
     name="remove",
     description="Remove a suggestion", 
-    guild_ids=[873835757238894592],
+    guild_ids=[285492131433283595],
     options=[
         create_option(
             name="message_id",
@@ -1104,7 +1084,7 @@ from discord_slash.model import SlashCommandPermissionType
     base="bottools",
     name="update_msg_id",
     description="Update footer with msg_id of embed message", 
-    guild_ids=[873835757238894592],
+    guild_ids=[285492131433283595],
     options=[
         create_option(
             name="message_id",
@@ -1152,7 +1132,7 @@ async def _bottools_update_msg_id(ctx, message_id, channel_flag):
     base="bottools",
     name="reset_final_flag",
     description="Reset final_flag on msg, so its can appears in finals again", 
-    guild_ids=[873835757238894592],
+    guild_ids=[285492131433283595],
     base_default_permission=False,
     base_permissions={
         873835757238894592: [
@@ -1180,7 +1160,7 @@ async def _bottools_reset_final_flag(ctx, message_id):
     base="bottools",
     name="clear_comments",
     description="Wow this command clear comments", 
-    guild_ids=[873835757238894592],
+    guild_ids=[285492131433283595],
     options=[
         create_option(
             name="message_id",
@@ -1227,5 +1207,5 @@ async def _bottools_clear_comments(ctx, message_id, channel_flag):
 
 
 if __name__ == "__main__":
-    #OnlinePlayersUpdate.start()
+    OnlinePlayersUpdate.start()
     client.run(token)
