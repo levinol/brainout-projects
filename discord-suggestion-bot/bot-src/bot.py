@@ -435,7 +435,6 @@ async def add_file_to_embed(ctx, args, sep_1, sep_2, channel_flag):
             await delete_with_react(bot_respond)
             return 0
 
-        # TODO discord_slash.error.IncorrectFormat: Number of components in one row should be between 1 and 5.
         try:
             await msg.edit(embed=embed, components=[create_actionrow(*url_buttons)])
         except slash_errors.IncorrectFormat:
