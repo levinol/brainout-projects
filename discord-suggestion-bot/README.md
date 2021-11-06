@@ -3,6 +3,9 @@ Containerized Submission/Suggestion automatization bot. The bot combines regular
 
 ## Frontend features implemented in the bot
 
+When using a bot, it is assumed that only slash commands are used. 
+When a user attaches files, the bot uses standard commands. Thus, without affecting the user experience.
+
 Links on titles lead to visual examples, links under them lead to [bot.py](discord-suggestion-bot/bot-src/bot.py) functions 
 
 #### 1. [Voice channel with display of necessary statistic](bot-src/online_channel_edit_example.gif)
@@ -16,7 +19,10 @@ Links on titles lead to visual examples, links under them lead to [bot.py](disco
 #### 5. [Convert replies on embed message into comments](bot-src/reply_to_comment_example.gif)
 [Raw code example](https://github.com/levinol/brainout-projects/blob/af5eb9e7aad2a770ae88f502bf47ceb57b670068/discord-suggestion-bot/bot-src/bot.py#L104-L132)
 
-## Backend features 
+## Backend features implemented in the bot
+
+The bot's backend is needed to assign the author to each embed message. The database stores the user's ID with embed messages ids, 
+allowing to create functions to check embed ownership.
 
 Links under titles lead to raw code examples
 
