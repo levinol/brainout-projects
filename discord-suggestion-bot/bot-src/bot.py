@@ -1,8 +1,10 @@
 from asyncio import events
+from logging import setLogRecordFactory
 import re
 import discord
 from discord import activity
 from discord import role
+from discord import channel
 from discord.channel import VoiceChannel
 from discord.embeds import Embed, EmptyEmbed
 from discord.emoji import Emoji
@@ -105,7 +107,30 @@ async def add_сomment(comment, mode):
     embed = msg.embeds[0]
     comment_time = comment.created_at.strftime("%A, %d %b %Y %H:%M") + ' UTC'
     embed.add_field(name=f"❗{mode} comment - {comment_time}❗", value=comment.content, inline = False)
+
     await msg.edit(embed=embed)
+
+    # User mention 
+    botgate_channel = client.get_channel(botgate_id)
+
+    if  comment.channel.id in [submit_id, submit_final_id, event_id]:
+        channel_type = 'submission' 
+    elif comment.channel.id in [suggest_id, server_id]:
+        channel_type = 'suggestion'
+    
+    with conn.cursor() as cursor:
+        conn.autocommit = True
+        if channel_type == 'submission':
+            cursor.execute("SELECT author_id FROM brainout.submissions WHERE msg_id = %s", (str(comment.reference.message_id),))
+        elif channel_type == 'suggestion':
+            cursor.execute("SELECT author_id FROM brainout.suggestions WHERE msg_id = %s", (str(comment.reference.message_id),))
+        result = cursor.fetchone()
+
+    author_id = result[0]
+
+    await botgate_channel.send(f'<@{author_id}>, {mode} left a comment on your {channel_type}:\n{comment.reference.jump_url}')
+
+    
 
 
 async def delete_with_react(msg):
@@ -215,7 +240,7 @@ async def on_message(message):
 
     # Check if this message is reply 
     if message.reference is not None: 
-        if message.channel.id in [settings['submit_channel'], settings['submit_final_channel'], settings['suggest_channel'], settings['suggest_server_channel']]: # обрабатываем сообщения в канале sumbit_channel
+        if message.channel.id in [submit_id, event_id, submit_final_id, suggest_id, server_id]: # обрабатываем сообщения в канале sumbit_channel
             submit_channel = client.get_channel(message.channel.id)
             
             #role check
@@ -233,6 +258,34 @@ async def on_message(message):
             # Delete reply
             await message.delete()
 
+# Deleted msg handler
+@client.event
+async def on_raw_message_delete(payload):
+    if payload.channel_id in [submit_id, event_id, submit_final_id, suggest_id, server_id]: # обрабатываем сообщения в каналах sumbit_channel
+        
+        if  payload.channel_id in [submit_id, submit_final_id, event_id]:
+            channel_type = 'submission' 
+        elif payload.channel_id in [suggest_id, server_id]:
+            channel_type = 'suggestion'
+        
+        # Delete from database
+        with conn.cursor() as cursor:
+            conn.autocommit = True
+            if channel_type == 'submission':
+                cursor.execute("SELECT author_id FROM brainout.submissions WHERE msg_id = %s", (str(payload.message_id),))
+                result = cursor.fetchone()
+                cursor.execute("DELETE FROM brainout.submissions WHERE msg_id = %s", (str(payload.message_id),))
+
+            elif channel_type == 'suggestion':
+                cursor.execute("SELECT author_id FROM brainout.suggestions WHERE msg_id = %s", (str(payload.message_id),))
+                result = cursor.fetchone()
+                cursor.execute("DELETE FROM brainout.suggestions WHERE msg_id = %s", (str(payload.message_id),))
+        
+        # User mention 
+        author_id = result[0]
+        botgate_channel = client.get_channel(botgate_id)
+        await botgate_channel.send(f'<@{author_id}>, your {channel_type} was deleted')
+        
 
 
 # NEW ERA of SLASH COMMANDS
