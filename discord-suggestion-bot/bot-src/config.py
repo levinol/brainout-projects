@@ -2,6 +2,7 @@ settings = {
     'bot': 'Brain/out bot',
     'id': 2546,
     'prefix': '/',
+    'profile_id': 848518443926028288,
     'submit_desc_channel': 873835758098718800,
     'submit_channel': 873835757926756381,
     'submit_final_channel': 873835757926756380,
