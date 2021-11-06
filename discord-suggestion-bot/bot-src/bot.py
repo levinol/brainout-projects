@@ -1,5 +1,5 @@
 from asyncio import events
-from logging import setLogRecordFactory
+from logging import error, setLogRecordFactory
 import re
 import discord
 from discord import activity
@@ -16,6 +16,7 @@ from discord_slash import SlashCommand, SlashContext
 from discord_slash.utils.manage_commands import create_choice, create_option
 from discord_slash.utils.manage_commands import create_permission
 from discord_slash.model import SlashCommandPermissionType
+import discord_slash.error as slash_errors
 
 import json
 import requests
@@ -38,7 +39,7 @@ server_id = settings['suggest_server_channel']
 online_id = settings['online_channel']
 embed_channels = [submit_id, submit_final_id, suggest_id, server_id, event_id]
 
-botgate_id = os.getenv('BOTGATE_CHANNEL')
+botgate_id = int(os.getenv('BOTGATE_CHANNEL'))
 
 subm_embed = Embed.from_dict(submission_embed)
 sugst_embed = Embed.from_dict(suggestion_embed)
@@ -350,6 +351,7 @@ from discord_slash.context import ComponentContext
 
 # handler for slash commands that were sent with the file
 async def add_file_to_embed(ctx, args, sep_1, sep_2, channel_flag):
+    error_flag = False
     arg_partition = args.partition(sep_2)
     if arg_partition[0]!= '':
         message = arg_partition[2]
@@ -432,12 +434,18 @@ async def add_file_to_embed(ctx, args, sep_1, sep_2, channel_flag):
             return 0
 
         # TODO discord_slash.error.IncorrectFormat: Number of components in one row should be between 1 and 5.
-        await msg.edit(embed=embed, components=[create_actionrow(*url_buttons)])
+        try:
+            await msg.edit(embed=embed, components=[create_actionrow(*url_buttons)])
+        except slash_errors.IncorrectFormat:
+            error_flag = True
+            await ctx.send(f'{ctx.message.author.mention}, You can not attach more than 5 links to a message. Archive your files and attach the archive ')
 
     else:
         await ctx.send(f'{ctx.message.author.mention}, that\'s not your message 😡')
         # Delete original message
         await delete_with_react(ctx.message)   
+    
+    return error_flag
 
 # Add addition to embed msg 
 async def add_text_to_embed(ctx, message, message_id, channel_flag):
@@ -727,7 +735,10 @@ async def submission(ctx, *, args):
                 bot_respond = await ctx.reply(f'{author.mention}, Submission was successfully created')
             await delete_with_react(bot_respond) if bot_respond else await ctx.reply(f'{author.mention}, Submission was not successfully created')
     elif command_type == 'add':
-        await add_file_to_embed(ctx, args, "message_id:", "message:", channel_flag="submission")    
+        error_flag = await add_file_to_embed(ctx, args, "message_id:", "message:", channel_flag="submission")
+        if not error_flag:
+            bot_respond = await ctx.reply(f'{author.mention}, file added successfully')
+            await delete_with_react(bot_respond)  
     else:
         await ctx.send('uhh im stuck')
 
@@ -919,7 +930,10 @@ async def suggestion(ctx, *, args):
                 bot_respond = await ctx.reply(f'{author.mention}, Suggestion was successfully created')
             await delete_with_react(bot_respond) if bot_respond else await ctx.reply(f'{author.mention}, Suggestion was not successfully created')
     elif command_type == 'add':
-        await add_file_to_embed(ctx, args, "message_id:", "message:", channel_flag="suggestion")
+        error_flag = await add_file_to_embed(ctx, args, "message_id:", "message:", channel_flag="suggestion")
+        if not error_flag:
+            bot_respond = await ctx.reply(f'{author.mention}, file added successfully')
+            await delete_with_react(bot_respond)
     else:
         await ctx.send('uhh im stuck')
 
