@@ -48,3 +48,5 @@ Change [```BOT_TOKEN```](https://github.com/levinol/brainout-projects/blob/bf8e9
 [```*_REACTION_EMOJI_ID```](https://github.com/levinol/brainout-projects/blob/bf8e935cfae6fb6148f71f5cead06fe17ec4d6a4/discord-suggestion-bot/docker-compose.yaml#L33-L35) - set the id of custom emojis that will be added on every embed message
 
 ### Run bot with ```docker-compose up --build``` from the directory with the docker-compose.yaml file
+
+##### I hope my bot example will help you with the development and hosting your own bot
