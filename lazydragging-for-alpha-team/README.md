@@ -6,7 +6,7 @@
 Для использования просто скачайте
 
 [Основной python файл](https://github.com/levinol/brainout-projects/blob/master/lazydragging%20for%20alpha%20team/lazydragging.py)
-Запускается из коробки, для запуска блида вручную запустите  
+Запускается из коробки, для запуска билда вручную запустите  
 
 ```>>>pyinstaller --onefile --icon=letto256.ico --noconsole lazydragging.py``` *(запускается из этой же директории)*
 
