@@ -83,7 +83,11 @@ class App(QWidget):
             else:
                 try:
                     shutil.copytree(self.path_to_folder, self.path_to_fut_folder)
-                    shutil.copy(self.path_to_file, os.path.join(self.path_to_fut_folder, "settings.json"))
+                    for dirname in os.listdir(self.path_to_folder):
+                        path_to_dirname = (os.path.join(self.path_to_folder, dirname))
+                        path_to_future_dirname = (os.path.join(self.path_to_fut_folder, dirname)) 
+                        if os.path.isdir(path_to_dirname):
+                            shutil.copy(self.path_to_file, os.path.join(path_to_future_dirname, "settings.json"))
                 except FileExistsError:
                     warn_msg = QMessageBox()
                     warn_msg.setIcon(QMessageBox.Critical)
