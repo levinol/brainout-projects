@@ -601,249 +601,249 @@ async def clear_embed(ctx, message_id, channel_flag):
 from discord_slash.model import ButtonStyle
 
 # submission part
-@slash.subcommand(
-    base="submission",
-    name="main", 
-    description="Make a submission in main channel", 
-    guild_ids=[285492131433283595],
-    options=[
-        create_option(
-            name="artwork_name",
-            description="Name of your artwork",
-            option_type=3,
-            required=True
-        ),
-        create_option(
-            name="description",
-            description="Optional description of your work",
-            option_type=3,
-            required=False
-        )
-    ]
-    )
-async def _submission_main(ctx, artwork_name, description=None):
-    if ctx.channel_id != botgate_id:
-        await ctx.send(f'This slash command works only in <#{botgate_id}> channel', hidden=True)
-        return None
-    author = ctx.author
+# @slash.subcommand(
+#     base="submission",
+#     name="main", 
+#     description="Make a submission in main channel", 
+#     guild_ids=[285492131433283595],
+#     options=[
+#         create_option(
+#             name="artwork_name",
+#             description="Name of your artwork",
+#             option_type=3,
+#             required=True
+#         ),
+#         create_option(
+#             name="description",
+#             description="Optional description of your work",
+#             option_type=3,
+#             required=False
+#         )
+#     ]
+#     )
+# async def _submission_main(ctx, artwork_name, description=None):
+#     if ctx.channel_id != botgate_id:
+#         await ctx.send(f'This slash command works only in <#{botgate_id}> channel', hidden=True)
+#         return None
+#     author = ctx.author
     
-    #Divide into title and desc
-    if description:
-        msg_title = artwork_name
-        msg_desc = description
-    else:
-        msg_title = artwork_name
-        msg_desc = discord.Embed.Empty 
+#     #Divide into title and desc
+#     if description:
+#         msg_title = artwork_name
+#         msg_desc = description
+#     else:
+#         msg_title = artwork_name
+#         msg_desc = discord.Embed.Empty 
 
-    msg_id = await create_embed_with_reactions(ctx, msg_title, msg_desc, submit_id, image_req=True)
+#     msg_id = await create_embed_with_reactions(ctx, msg_title, msg_desc, submit_id, image_req=True)
 
-    if len(str(msg_id)) < 2:
-        await ctx.send(f'{author.mention}, ask helper to update message id of your embed')
-    else:
-        with conn.cursor() as cursor:
-            conn.autocommit = True
-            cursor.execute(f"INSERT INTO brainout.submissions(author_id, msg_id, in_final) VALUES ({author.id}, {msg_id}, {False})")
-        await ctx.send(f'{author.mention}, provide the files in necessary format wia add command', hidden=True)  
+#     if len(str(msg_id)) < 2:
+#         await ctx.send(f'{author.mention}, ask helper to update message id of your embed')
+#     else:
+#         with conn.cursor() as cursor:
+#             conn.autocommit = True
+#             cursor.execute(f"INSERT INTO brainout.submissions(author_id, msg_id, in_final) VALUES ({author.id}, {msg_id}, {False})")
+#         await ctx.send(f'{author.mention}, provide the files in necessary format wia add command', hidden=True)  
 
-@slash.subcommand(
-    base="submission",
-    name="event", 
-    description="Make a submission in event channel", 
-    guild_ids=[285492131433283595],
-    options=[
-        create_option(
-            name="artwork_name",
-            description="Name of your artwork",
-            option_type=3,
-            required=True
-        ),
-        create_option(
-            name="description",
-            description="Optional description of your work",
-            option_type=3,
-            required=False
-        )
-    ]
-    )
-async def _submission_event(ctx, artwork_name, description=None):
-    if ctx.channel_id != botgate_id:
-        await ctx.send(f'This slash command works only in <#{botgate_id}> channel', hidden=True)
-        return None
+# @slash.subcommand(
+#     base="submission",
+#     name="event", 
+#     description="Make a submission in event channel", 
+#     guild_ids=[285492131433283595],
+#     options=[
+#         create_option(
+#             name="artwork_name",
+#             description="Name of your artwork",
+#             option_type=3,
+#             required=True
+#         ),
+#         create_option(
+#             name="description",
+#             description="Optional description of your work",
+#             option_type=3,
+#             required=False
+#         )
+#     ]
+#     )
+# async def _submission_event(ctx, artwork_name, description=None):
+#     if ctx.channel_id != botgate_id:
+#         await ctx.send(f'This slash command works only in <#{botgate_id}> channel', hidden=True)
+#         return None
     
-    if event_id:
-        pass
-    else:
-        await ctx.send('No active event', hidden=True)
-        return 0
-    author = ctx.author
+#     if event_id:
+#         pass
+#     else:
+#         await ctx.send('No active event', hidden=True)
+#         return 0
+#     author = ctx.author
     
-    #Divide into title and desc
-    if description:
-        msg_title = artwork_name
-        msg_desc = description
-    else:
-        msg_title = artwork_name
-        msg_desc = discord.Embed.Empty 
+#     #Divide into title and desc
+#     if description:
+#         msg_title = artwork_name
+#         msg_desc = description
+#     else:
+#         msg_title = artwork_name
+#         msg_desc = discord.Embed.Empty 
 
-    msg_id = await create_embed_with_reactions(ctx, msg_title, msg_desc, event_id, image_req=True)
+#     msg_id = await create_embed_with_reactions(ctx, msg_title, msg_desc, event_id, image_req=True)
 
-    if len(str(msg_id)) < 2:
-        await ctx.send(f'{author.mention}, ask helper to update message id of your embed')
-    else:
-        with conn.cursor() as cursor:
-            conn.autocommit = True
-            cursor.execute(f"INSERT INTO brainout.submissions(author_id, msg_id, in_final) VALUES ({author.id}, {msg_id}, {False})")
-        await ctx.send(f'{author.mention}, provide the files in necessary format wia add command', hidden=True)  
+#     if len(str(msg_id)) < 2:
+#         await ctx.send(f'{author.mention}, ask helper to update message id of your embed')
+#     else:
+#         with conn.cursor() as cursor:
+#             conn.autocommit = True
+#             cursor.execute(f"INSERT INTO brainout.submissions(author_id, msg_id, in_final) VALUES ({author.id}, {msg_id}, {False})")
+#         await ctx.send(f'{author.mention}, provide the files in necessary format wia add command', hidden=True)  
 
-# submit command creates an embed message, adds the message_id and reactions immediately after creation.
-# _submission_main command with attached image
-# _submission_add command with attached image
-@client.command()
-async def submission(ctx, *, args): 
-    if ctx.channel.id != botgate_id:
-        bot_respond = await ctx.send(f'{ctx.message.author.mention}, this command works only in <#{botgate_id}> channel')
-        await delete_with_react(bot_respond)
-        await delete_with_react(ctx.message)
-        return None
-    command_type, args=args.split(' ',1)
-    print(command_type, args)
-    msg = args
-    author = ctx.message.author
-    if command_type == 'main':
-        msg_id = await send_embed_with_file(ctx, args, submit_id, "artwork_name:", "description:", image_req=True)
-        if len(str(msg_id)) < 2:
-            await ctx.send(f'{author.mention}, ask helper to update message id of your embed')
-        else:
-            with conn.cursor() as cursor:
-                conn.autocommit = True
-                cursor.execute(f"INSERT INTO brainout.submissions(author_id, msg_id, in_final) VALUES ({author.id}, {msg_id}, {False})")
-                bot_respond = await ctx.reply(f'{author.mention}, Submission was successfully created')
-            await delete_with_react(bot_respond) if bot_respond else await ctx.reply(f'{author.mention}, Submission was not successfully created')
-    elif command_type == 'event':
-        if event_id:
-            pass
-        else:
-            await ctx.send('No active event')
-            return 0
-        msg_id = await send_embed_with_file(ctx, args, event_id, "artwork_name:", "description:", image_req=True)
-        if len(str(msg_id)) < 2:
-            await ctx.send(f'{author.mention}, ask helper to update message id of your embed')
-        else:
-            with conn.cursor() as cursor:
-                conn.autocommit = True
-                cursor.execute(f"INSERT INTO brainout.submissions(author_id, msg_id, in_final) VALUES ({author.id}, {msg_id}, {False})")
-                bot_respond = await ctx.reply(f'{author.mention}, Submission was successfully created')
-            await delete_with_react(bot_respond) if bot_respond else await ctx.reply(f'{author.mention}, Submission was not successfully created')
-    elif command_type == 'add':
-        error_flag = await add_file_to_embed(ctx, args, "message_id:", "message:", channel_flag="submission")
-        if not error_flag:
-            bot_respond = await ctx.reply(f'{author.mention}, file added successfully')
-            await delete_with_react(bot_respond)  
-    else:
-        await ctx.send('uhh im stuck')
+# # submit command creates an embed message, adds the message_id and reactions immediately after creation.
+# # _submission_main command with attached image
+# # _submission_add command with attached image
+# @client.command()
+# async def submission(ctx, *, args): 
+#     if ctx.channel.id != botgate_id:
+#         bot_respond = await ctx.send(f'{ctx.message.author.mention}, this command works only in <#{botgate_id}> channel')
+#         await delete_with_react(bot_respond)
+#         await delete_with_react(ctx.message)
+#         return None
+#     command_type, args=args.split(' ',1)
+#     print(command_type, args)
+#     msg = args
+#     author = ctx.message.author
+#     if command_type == 'main':
+#         msg_id = await send_embed_with_file(ctx, args, submit_id, "artwork_name:", "description:", image_req=True)
+#         if len(str(msg_id)) < 2:
+#             await ctx.send(f'{author.mention}, ask helper to update message id of your embed')
+#         else:
+#             with conn.cursor() as cursor:
+#                 conn.autocommit = True
+#                 cursor.execute(f"INSERT INTO brainout.submissions(author_id, msg_id, in_final) VALUES ({author.id}, {msg_id}, {False})")
+#                 bot_respond = await ctx.reply(f'{author.mention}, Submission was successfully created')
+#             await delete_with_react(bot_respond) if bot_respond else await ctx.reply(f'{author.mention}, Submission was not successfully created')
+#     elif command_type == 'event':
+#         if event_id:
+#             pass
+#         else:
+#             await ctx.send('No active event')
+#             return 0
+#         msg_id = await send_embed_with_file(ctx, args, event_id, "artwork_name:", "description:", image_req=True)
+#         if len(str(msg_id)) < 2:
+#             await ctx.send(f'{author.mention}, ask helper to update message id of your embed')
+#         else:
+#             with conn.cursor() as cursor:
+#                 conn.autocommit = True
+#                 cursor.execute(f"INSERT INTO brainout.submissions(author_id, msg_id, in_final) VALUES ({author.id}, {msg_id}, {False})")
+#                 bot_respond = await ctx.reply(f'{author.mention}, Submission was successfully created')
+#             await delete_with_react(bot_respond) if bot_respond else await ctx.reply(f'{author.mention}, Submission was not successfully created')
+#     elif command_type == 'add':
+#         error_flag = await add_file_to_embed(ctx, args, "message_id:", "message:", channel_flag="submission")
+#         if not error_flag:
+#             bot_respond = await ctx.reply(f'{author.mention}, file added successfully')
+#             await delete_with_react(bot_respond)  
+#     else:
+#         await ctx.send('uhh im stuck')
 
-@slash.subcommand(
-    base="submission",
-    name="add",
-    description="Add an attachment to a submission", 
-    guild_ids=[285492131433283595],
-    options=[
-        create_option(
-            name="message_id",
-            description="Copy message id from submission",
-            option_type=3,
-            required=True
-        ),
-        create_option(
-            name="message",
-            description="Message for addition field",
-            option_type=3,
-            required=False
-        )
-    ]
-    )
-async def _submission_add(ctx, message_id, message=None):
-    if ctx.channel_id != botgate_id:
-        await ctx.send(f'This slash command works only in <#{botgate_id}> channel', hidden=True)
-        return None
-    await add_text_to_embed(ctx, message, message_id, channel_flag="submission")
+# @slash.subcommand(
+#     base="submission",
+#     name="add",
+#     description="Add an attachment to a submission", 
+#     guild_ids=[285492131433283595],
+#     options=[
+#         create_option(
+#             name="message_id",
+#             description="Copy message id from submission",
+#             option_type=3,
+#             required=True
+#         ),
+#         create_option(
+#             name="message",
+#             description="Message for addition field",
+#             option_type=3,
+#             required=False
+#         )
+#     ]
+#     )
+# async def _submission_add(ctx, message_id, message=None):
+#     if ctx.channel_id != botgate_id:
+#         await ctx.send(f'This slash command works only in <#{botgate_id}> channel', hidden=True)
+#         return None
+#     await add_text_to_embed(ctx, message, message_id, channel_flag="submission")
 
-@slash.subcommand(
-    base="submission",
-    name="addition",
-    description="Add an addition to a submission", 
-    guild_ids=[285492131433283595],
-    options=[
-        create_option(
-            name="message_id",
-            description="Copy message id from submission",
-            option_type=3,
-            required=True
-        ),
-        create_option(
-            name="message",
-            description="Message for addition field",
-            option_type=3,
-            required=True
-        )
-    ]
-    )
-async def _submission_addition(ctx, message_id, message):
-    if ctx.channel_id != botgate_id:
-        await ctx.send(f'This slash command works only in <#{botgate_id}> channel', hidden=True)
-        return None
-    await add_text_to_embed(ctx, message, message_id, channel_flag="submission")
+# @slash.subcommand(
+#     base="submission",
+#     name="addition",
+#     description="Add an addition to a submission", 
+#     guild_ids=[285492131433283595],
+#     options=[
+#         create_option(
+#             name="message_id",
+#             description="Copy message id from submission",
+#             option_type=3,
+#             required=True
+#         ),
+#         create_option(
+#             name="message",
+#             description="Message for addition field",
+#             option_type=3,
+#             required=True
+#         )
+#     ]
+#     )
+# async def _submission_addition(ctx, message_id, message):
+#     if ctx.channel_id != botgate_id:
+#         await ctx.send(f'This slash command works only in <#{botgate_id}> channel', hidden=True)
+#         return None
+#     await add_text_to_embed(ctx, message, message_id, channel_flag="submission")
 
-@slash.subcommand(
-    base="submission",
-    name="сlear",
-    description="Clear all optional description fields", 
-    guild_ids=[285492131433283595],
-    options=[
-        create_option(
-            name="message_id",
-            description="Copy message id from submission",
-            option_type=3,
-            required=True
-        )
-    ]
-    )
-async def _submission_clear(ctx, message_id):
-    if ctx.channel_id != botgate_id:
-        await ctx.send(f'This slash command works only in <#{botgate_id}> channel', hidden=True)
-        return None
-    await clear_embed(ctx, message_id, "submission")
+# @slash.subcommand(
+#     base="submission",
+#     name="сlear",
+#     description="Clear all optional description fields", 
+#     guild_ids=[285492131433283595],
+#     options=[
+#         create_option(
+#             name="message_id",
+#             description="Copy message id from submission",
+#             option_type=3,
+#             required=True
+#         )
+#     ]
+#     )
+# async def _submission_clear(ctx, message_id):
+#     if ctx.channel_id != botgate_id:
+#         await ctx.send(f'This slash command works only in <#{botgate_id}> channel', hidden=True)
+#         return None
+#     await clear_embed(ctx, message_id, "submission")
 
-@slash.subcommand(
-    base="submission",
-    name="remove",
-    description="Remove a submission", 
-    guild_ids=[285492131433283595],
-    options=[
-        create_option(
-            name="message_id",
-            description="Copy message id from submission",
-            option_type=3,
-            required=True
-        )
-    ]
-    )
-async def _submission_remove(ctx, message_id):
-    if ctx.channel_id != botgate_id:
-        await ctx.send(f'This slash command works only in <#{botgate_id}> channel', hidden=True)
-        return None
+# @slash.subcommand(
+#     base="submission",
+#     name="remove",
+#     description="Remove a submission", 
+#     guild_ids=[285492131433283595],
+#     options=[
+#         create_option(
+#             name="message_id",
+#             description="Copy message id from submission",
+#             option_type=3,
+#             required=True
+#         )
+#     ]
+#     )
+# async def _submission_remove(ctx, message_id):
+#     if ctx.channel_id != botgate_id:
+#         await ctx.send(f'This slash command works only in <#{botgate_id}> channel', hidden=True)
+#         return None
 
-    msg =  await msg_fetch_slash(ctx, message_id, "submission")
-    if msg == 0:
-        return 0
+#     msg =  await msg_fetch_slash(ctx, message_id, "submission")
+#     if msg == 0:
+#         return 0
 
-    is_author_flag = author_id_check(str(message_id),str(ctx.author.id), 'submission' )
+#     is_author_flag = author_id_check(str(message_id),str(ctx.author.id), 'submission' )
 
-    if is_author_flag:
-        await msg.delete(delay=5)
-        await ctx.send('Message deleted', hidden=True)
-    else:
-        await ctx.send(f'{ctx.author.mention}, that\'s not your message 😡')
+#     if is_author_flag:
+#         await msg.delete(delay=5)
+#         await ctx.send('Message deleted', hidden=True)
+#     else:
+#         await ctx.send(f'{ctx.author.mention}, that\'s not your message 😡')
 
 # suggestion part
 @slash.subcommand(
