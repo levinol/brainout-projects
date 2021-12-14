@@ -1,0 +1,496 @@
+{
+    "ITEM_PLAYER_SKIN_2CHER": [
+        "2cher"
+    ],
+    "ITEM_PLAYER_SKIN_AGENT": [
+        "agent"
+    ],
+    "ITEM_PLAYER_SKIN_ALPHA": [
+        "alpha"
+    ],
+    "ITEM_PLAYER_SKIN_ARCTIC": [
+        "arctic"
+    ],
+    "ITEM_PLAYER_SKIN_AUT": [
+        "aut"
+    ],
+    "ITEM_PLAYER_SKIN_b800": [
+        "b800"
+    ],
+    "ITEM_PLAYER_SKIN_BANDIT": [
+        "bandit"
+    ],
+    "ITEM_PLAYER_SKIN_BEAR": [
+        "bear"
+    ],
+    "ITEM_PLAYER_SKIN_BEDOUIN": [
+        "bedouin"
+    ],
+    "ITEM_PLAYER_SKIN_BERILL": [
+        "berill"
+    ],
+    "ITEM_PLAYER_SKIN_BILL": [
+        "bill"
+    ],
+    "ITEM_PLAYER_SKIN_BLUE": [
+        "blue"
+    ],
+    "ITEM_PLAYER_SKIN_BONES": [
+        "bones"
+    ],
+    "ITEM_PLAYER_SKIN_BOPE": [
+        "bope"
+    ],
+    "ITEM_PLAYER_SKIN_BOSS": [
+        "boss"
+    ],
+    "ITEM_PLAYER_SKIN_BOT": [
+        "bot1",
+        "bot2",
+        "bot3",
+        "bot4"
+    ],
+    "ITEM_PLAYER_SKIN_BUNDE": [
+        "bunde"
+    ],
+    "ITEM_PLAYER_SKIN_CAPTAIN": [
+        "captain"
+    ],
+    "ITEM_PLAYER_SKIN_CERBERUS": [
+        "cerberus"
+    ],
+    "ITEM_PLAYER_SKIN_CLOWN": [
+        "clown"
+    ],
+    "ITEM_PLAYER_SKIN_CN": [
+        "cn"
+    ],
+    "ITEM_PLAYER_SKIN_COMBINE": [
+        "combine"
+    ],
+    "ITEM_PLAYER_SKIN_COMM": [
+        "comm"
+    ],
+    "ITEM_PLAYER_SKIN_CONDOR": [
+        "condor"
+    ],
+    "ITEM_PLAYER_SKIN_COOR": [
+        "coor"
+    ],
+    "ITEM_PLAYER_SKIN_CRAWLER": [
+        "crawler"
+    ],
+    "ITEM_PLAYER_SKIN_CS3B": [
+        "cs3b"
+    ],
+    "ITEM_PLAYER_SKIN_DANCER": [
+        "dancer"
+    ],
+    "ITEM_PLAYER_SKIN_DEADMAN": [
+        "deadman"
+    ],
+    "ITEM_PLAYER_SKIN_DELTA": [
+        "delta"
+    ],
+    "ITEM_PLAYER_SKIN_DEMOMAN": [
+        "demoman"
+    ],
+    "ITEM_PLAYER_SKIN_DEPTH": [
+        "depth"
+    ],
+    "ITEM_PLAYER_SKIN_DEVGRU": [
+        "devgru"
+    ],
+    "ITEM_PLAYER_SKIN_DIANE": [
+        "diane"
+    ],
+    "ITEM_PLAYER_SKIN_DIVERSIONIST": [
+        "diversionist"
+    ],
+    "ITEM_PLAYER_SKIN_DOCTOR": [
+        "doctor"
+    ],
+    "ITEM_PLAYER_SKIN_DUSTY": [
+        "dusty"
+    ],
+    "ITEM_PLAYER_SKIN_ELF": [
+        "elf"
+    ],
+    "ITEM_PLAYER_SKIN_EMG": [
+        "emg"
+    ],
+    "ITEM_PLAYER_SKIN_EMIL": [
+        "emil"
+    ],
+    "ITEM_PLAYER_SKIN_ENGINEER": [
+        "engineer"
+    ],
+    "ITEM_PLAYER_SKIN_ERIK": [
+        "erik"
+    ],
+    "ITEM_PLAYER_SKIN_EXO": [
+        "exo"
+    ],
+    "ITEM_PLAYER_SKIN_FACELESS": [
+        "faceless"
+    ],
+    "ITEM_PLAYER_SKIN_FANTOMAS": [
+        "fantomas"
+    ],
+    "ITEM_PLAYER_SKIN_FBR": [
+        "fbr"
+    ],
+    "ITEM_PLAYER_SKIN_FIR": [
+        "fir"
+    ],
+    "ITEM_PLAYER_SKIN_FOSTER": [
+        "foster"
+    ],
+    "ITEM_PLAYER_SKIN_FROST": [
+        "frost"
+    ],
+    "ITEM_PLAYER_SKIN_fs": [
+        "fs"
+    ],
+    "ITEM_PLAYER_SKIN_FSA": [
+        "fsa"
+    ],
+    "ITEM_PLAYER_SKIN_FSG": [
+        "fsg"
+    ],
+    "ITEM_PLAYER_SKIN_GANGSTA": [
+        "gangsta"
+    ],
+    "ITEM_PLAYER_SKIN_GENTLEMAN": [
+        "gentleman"
+    ],
+    "ITEM_PLAYER_SKIN_GERMAN": [
+        "german"
+    ],
+    "ITEM_PLAYER_SKIN_GHILLIE_DESERT": [
+        "ghillie-desert"
+    ],
+    "ITEM_PLAYER_SKIN_GREEN": [
+        "green"
+    ],
+    "ITEM_PLAYER_SKIN_GRIN": [
+        "grin"
+    ],
+    "ITEM_PLAYER_SKIN_GROM": [
+        "grom"
+    ],
+    "ITEM_PLAYER_SKIN_GROOM": [
+        "groom"
+    ],
+    "ITEM_PLAYER_SKIN_GSG9": [
+        "gsg9"
+    ],
+    "ITEM_PLAYER_SKIN_GUARDSMAN": [
+        "gardsman"
+    ],
+    "ITEM_PLAYER_SKIN_GURZA": [
+        "gurza"
+    ],
+    "ITEM_PLAYER_SKIN_HELL": [
+        "hell"
+    ],
+    "ITEM_PLAYER_SKIN_HUNT": [
+        "hunt"
+    ],
+    "ITEM_PLAYER_SKIN_HUNTER": [
+        "hunter"
+    ],
+    "ITEM_PLAYER_SKIN_INSURGENT": [
+        "insurgent"
+    ],
+    "ITEM_PLAYER_SKIN_INVADER": [
+        "invader"
+    ],
+    "ITEM_PLAYER_SKIN_JACK": [
+        "jack"
+    ],
+    "ITEM_PLAYER_SKIN_JACKET": [
+        "jacket"
+    ],
+    "ITEM_PLAYER_SKIN_JESTER": [
+        "jester"
+    ],
+    "ITEM_PLAYER_SKIN_JONNY": [
+        "jonny"
+    ],
+    "ITEM_PLAYER_SKIN_JTF2": [
+        "jtf2"
+    ],
+    "ITEM_PLAYER_SKIN_JUGGERNAUT": [
+        "juggernaut"
+    ],
+    "ITEM_PLAYER_SKIN_KEKOV": [
+        "kekov"
+    ],
+    "ITEM_PLAYER_SKIN_KOBRA": [
+        "kobra"
+    ],
+    "ITEM_PLAYER_SKIN_KRIEG": [
+        "krieg"
+    ],
+    "ITEM_PLAYER_SKIN_LARRY": [
+        "larry"
+    ],
+    "ITEM_PLAYER_SKIN_LIBERATOR": [
+        "liberator"
+    ],
+    "ITEM_PLAYER_SKIN_LOYALIST": [
+        "loyalist"
+    ],
+    "ITEM_PLAYER_SKIN_MAFIA": [
+        "mafia"
+    ],
+    "ITEM_PLAYER_SKIN_MANIAC": [
+        "maniac"
+    ],
+    "ITEM_PLAYER_SKIN_MARAUDER": [
+        "marauder"
+    ],
+    "ITEM_PLAYER_SKIN_MARIACHI": [
+        "mariachi"
+    ],
+    "ITEM_PLAYER_SKIN_MARINES": [
+        "marines"
+    ],
+    "ITEM_PLAYER_SKIN_MARKSMAN": [
+        "marksman"
+    ],
+    "ITEM_PLAYER_SKIN_MASK": [
+        "mask"
+    ],
+    "ITEM_PLAYER_SKIN_MASTER": [
+        "master"
+    ],
+    "ITEM_PLAYER_SKIN_MEDIC": [
+        "medic"
+    ],
+    "ITEM_PLAYER_SKIN_MILITIA": [
+        "militia"
+    ],
+    "ITEM_PLAYER_SKIN_NAVI": [
+        "navi"
+    ],
+    "ITEM_PLAYER_SKIN_NEW": [
+        "new"
+    ],
+    "ITEM_PLAYER_SKIN_NIKOLAY": [
+        "nikolay"
+    ],
+    "ITEM_PLAYER_SKIN_NUT": [
+        "nut"
+    ],
+    "ITEM_PLAYER_SKIN_NVA": [
+        "nva"
+    ],
+    "ITEM_PLAYER_SKIN_OFFICER": [
+        "officer"
+    ],
+    "ITEM_PLAYER_SKIN_OMON": [
+        "omon"
+    ],
+    "ITEM_PLAYER_SKIN_OPERATOR": [
+        "operator"
+    ],
+    "ITEM_PLAYER_SKIN_ORDER": [
+        "order"
+    ],
+    "ITEM_PLAYER_SKIN_PARA": [
+        "para"
+    ],
+    "ITEM_PLAYER_SKIN_PARATROOPER": [
+        "paratrooper"
+    ],
+    "ITEM_PLAYER_SKIN_PATHFINDER": [
+        "pathfinder"
+    ],
+    "ITEM_PLAYER_SKIN_PAYDAY": [
+        "payday"
+    ],
+    "ITEM_PLAYER_SKIN_PEACE": [
+        "peace"
+    ],
+    "ITEM_PLAYER_SKIN_PHANTOM": [
+        "phantom"
+    ],
+    "ITEM_PLAYER_SKIN_PILOT": [
+        "pilot"
+    ],
+    "ITEM_PLAYER_SKIN_PMC": [
+        "pmc"
+    ],
+    "ITEM_PLAYER_SKIN_POLAR": [
+        "polar"
+    ],
+    "ITEM_PLAYER_SKIN_PREACHER": [
+        "preacher"
+    ],
+    "ITEM_PLAYER_SKIN_PROTECT": [
+        "protect",
+        "protect2",
+        "protect3"
+    ],
+    "ITEM_PLAYER_SKIN_PUMPKIN": [
+        "pumpkin"
+    ],
+    "ITEM_PLAYER_SKIN_RAIDER": [
+        "raider"
+    ],
+    "ITEM_PLAYER_SKIN_RANGER": [
+        "ranger"
+    ],
+    "ITEM_PLAYER_SKIN_RATNIK": [
+        "ratnik"
+    ],
+    "ITEM_PLAYER_SKIN_REAPER": [
+        "reaper"
+    ],
+    "ITEM_PLAYER_SKIN_REBEL": [
+        "rebel"
+    ],
+    "ITEM_PLAYER_SKIN_RECON": [
+        "recon"
+    ],
+    "ITEM_PLAYER_SKIN_REVO": [
+        "revo"
+    ],
+    "ITEM_PLAYER_SKIN_RIOT": [
+        "riot"
+    ],
+    "ITEM_PLAYER_SKIN_ROBBER": [
+        "robber"
+    ],
+    "ITEM_PLAYER_SKIN_RONALD": [
+        "ronald"
+    ],
+    "ITEM_PLAYER_SKIN_RUDOLF": [
+        "rudolf"
+    ],
+    "ITEM_PLAYER_SKIN_SAILOR": [
+        "sailor"
+    ],
+    "ITEM_PLAYER_SKIN_SAS": [
+        "sas"
+    ],
+    "ITEM_PLAYER_SKIN_SERGEANT": [
+        "sergeant"
+    ],
+    "ITEM_PLAYER_SKIN_SHADOW": [
+        "shadow"
+    ],
+    "ITEM_PLAYER_SKIN_SHINOBI": [
+        "shinobi"
+    ],
+    "ITEM_PLAYER_SKIN_SIBER": [
+        "siber"
+    ],
+    "ITEM_PLAYER_SKIN_SILVERHAND": [
+        "silverhand"
+    ],
+    "ITEM_PLAYER_SKIN_SKAT": [
+        "skat"
+    ],
+    "ITEM_PLAYER_SKIN_SKULL": [
+        "skull"
+    ],
+    "ITEM_PLAYER_SKIN_SLEDGE": [
+        "sledge"
+    ],
+    "ITEM_PLAYER_SKIN_SNIPER": [
+        "sniper"
+    ],
+    "ITEM_PLAYER_SKIN_SOBR": [
+        "sobr"
+    ],
+    "ITEM_PLAYER_SKIN_SOF": [
+        "sof"
+    ],
+    "ITEM_PLAYER_SKIN_SOVIET": [
+        "soviet"
+    ],
+    "ITEM_PLAYER_SKIN_SPEC": [
+        "spec"
+    ],
+    "ITEM_PLAYER_SKIN_SPECTATOR": [
+        "spectator"
+    ],
+    "ITEM_PLAYER_SKIN_SPETSNAZ": [
+        "spetsnaz"
+    ],
+    "ITEM_PLAYER_SKIN_ST6": [
+        "st6"
+    ],
+    "ITEM_PLAYER_SKIN_STALKER": [
+        "stalker"
+    ],
+    "ITEM_PLAYER_SKIN_STEAMPUNK": [
+        "steampunk"
+    ],
+    "ITEM_PLAYER_SKIN_SURVIVOR": [
+        "survivor"
+    ],
+    "ITEM_PLAYER_SKIN_SWAT": [
+        "swat"
+    ],
+    "ITEM_PLAYER_SKIN_TERMINATOR": [
+        "t800"
+    ],
+    "ITEM_PLAYER_SKIN_TACTICAL": [
+        "tactical"
+    ],
+    "ITEM_PLAYER_SKIN_TERROR": [
+        "terror"
+    ],
+    "ITEM_PLAYER_SKIN_TRAPPER": [
+        "trapper"
+    ],
+    "ITEM_PLAYER_SKIN_TROOPER": [
+        "trooper"
+    ],
+    "ITEM_PLAYER_SKIN_TUNDRA": [
+        "tundra"
+    ],
+    "ITEM_PLAYER_SKIN_UNK": [
+        "unk"
+    ],
+    "ITEM_PLAYER_SKIN_URBAN": [
+        "urban"
+    ],
+    "ITEM_PLAYER_SKIN_USEC": [
+        "usec"
+    ],
+    "ITEM_PLAYER_SKIN_USMC": [
+        "usmc"
+    ],
+    "ITEM_PLAYER_SKIN_VDV": [
+        "vdv"
+    ],
+    "ITEM_PLAYER_SKIN_VELVET": [
+        "velvet"
+    ],
+    "ITEM_PLAYER_SKIN_VGS": [
+        "vgs"
+    ],
+    "ITEM_PLAYER_SKIN_VIETCONG": [
+        "vietcong"
+    ],
+    "ITEM_PLAYER_SKIN_VIETNAM": [
+        "vietnam"
+    ],
+    "ITEM_PLAYER_SKIN_VIMPEL": [
+        "vimpel"
+    ],
+    "ITEM_PLAYER_SKIN_WARRIOR": [
+        "warrior"
+    ],
+    "ITEM_PLAYER_SKIN_WOLF": [
+        "wolf"
+    ],
+    "ITEM_PLAYER_SKIN_XMAS": [
+        "xmas"
+    ]
+}
