@@ -1090,6 +1090,31 @@ async def _suggestion_remove(ctx, message_id):
     else:
         await ctx.send(f'{ctx.author.mention}, that\'s not your message 😡')
 
+from helpful_python_scripts.skinname2png import skinname2png
+# Help tools
+@slash.subcommand(
+    base="helptools",
+    name="uniform",
+    description="Search through existing uniforms", 
+    guild_ids=[285492131433283595],
+    options=[
+        create_option(
+            name="uniform_name",
+            description="Type the uniform name as it's named in the game",
+            option_type=3,
+            required=True
+        )
+    ]
+    )
+async def _helptools_uniform(ctx, uniform_name):
+    path2jsonfiles = r'./helpful_python_scripts/'
+    filename = skinname2png(uniform_name, path2jsonfiles)
+    if filename:
+        uniform_file = discord.File(f"./uniforms_2k/{filename}", filename=f"{filename}")
+        temp_embed = discord.Embed(title='Uniform', description=f'Found for the following query \"{uniform_name}\"', color=0x505050, timestamp=datetime.datetime.utcnow())
+        await ctx.send(file=uniform_file, embed=temp_embed.set_image(url=f"attachment://{filename}"))
+    else:
+        await ctx.send(f'{ctx.author.mention},  Can\'t find uniform by following query \"{uniform_name}\", sowwy 🥺')
 # Mod tools
 from discord_slash.utils.manage_commands import create_permission
 from discord_slash.model import SlashCommandPermissionType
