@@ -985,31 +985,31 @@ async def _suggestion_server(ctx, suggestion_topic, description=None):
         await ctx.send(f'{author.mention}, provide the files in necessary format wia add command', hidden=True) if db_flag else await ctx.send(f'{author.mention}, Suggestion was not successfully created')
 
 
-@slash.subcommand(
-    base="suggestion",
-    name="add",
-    description="Add an attachment to a suggestion", 
-    guild_ids=[285492131433283595],
-    options=[
-        create_option(
-            name="message_id",
-            description="Copy message id from suggestion",
-            option_type=3,
-            required=True
-        ),
-        create_option(
-            name="message",
-            description="Message for addition field",
-            option_type=3,
-            required=False
-        )
-    ]
-    )
-async def _suggestion_add(ctx, message_id, message):
-    if ctx.channel_id != botgate_id:
-        await ctx.send(f'This slash command works only in <#{botgate_id}> channel', hidden=True)
-        return None
-    await add_text_to_embed(ctx, message, message_id, channel_flag="suggestion")
+# @slash.subcommand(
+#     base="suggestion",
+#     name="add",
+#     description="Add an attachment to a suggestion", 
+#     guild_ids=[285492131433283595],
+#     options=[
+#         create_option(
+#             name="message_id",
+#             description="Copy message id from suggestion",
+#             option_type=3,
+#             required=True
+#         ),
+#         create_option(
+#             name="message",
+#             description="Message for addition field",
+#             option_type=3,
+#             required=False
+#         )
+#     ]
+#     )
+# async def _suggestion_add(ctx, message_id, message):
+#     if ctx.channel_id != botgate_id:
+#         await ctx.send(f'This slash command works only in <#{botgate_id}> channel', hidden=True)
+#         return None
+#     await add_text_to_embed(ctx, message, message_id, channel_flag="suggestion")
 
 @slash.subcommand(
     base="suggestion",
