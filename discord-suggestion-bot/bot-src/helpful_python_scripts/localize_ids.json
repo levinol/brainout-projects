@@ -8,6 +8,9 @@
     "ITEM_PLAYER_SKIN_ALPHA": [
         "alpha"
     ],
+    "ITEM_PLAYER_SKIN_ALPINE": [
+        "alpine"
+    ],
     "ITEM_PLAYER_SKIN_ARCTIC": [
         "arctic"
     ],
@@ -358,6 +361,9 @@
     "ITEM_PLAYER_SKIN_REVO": [
         "revo"
     ],
+    "ITEM_PLAYER_SKIN_RFE": [
+        "rfe"
+    ],
     "ITEM_PLAYER_SKIN_RIOT": [
         "riot"
     ],
@@ -402,6 +408,12 @@
     ],
     "ITEM_PLAYER_SKIN_SNIPER": [
         "sniper"
+    ],
+    "ITEM_PLAYER_SKIN_SNIPER_WOLF": [
+        "sniper-wolf"
+    ],
+    "ITEM_PLAYER_SKIN_SNOWDRIFT": [
+        "snowdrift"
     ],
     "ITEM_PLAYER_SKIN_SOBR": [
         "sobr"
