@@ -1,4 +1,4 @@
-import sys, os, json, shutil
+import sys, os, json, shutil, zipfile
 from PyQt5.QtWidgets import QApplication, QWidget, QInputDialog, QLineEdit, QFileDialog, QMessageBox
 from PyQt5 import QtCore
 from PyQt5.QtGui import QIcon
@@ -82,12 +82,17 @@ class App(QWidget):
                 folder_msg.exec_()
             else:
                 try:
-                    shutil.copytree(self.path_to_folder, self.path_to_fut_folder)
+                    shutil.copytree(self.path_to_folder, self.path_to_fut_folder, dirs_exist_ok=True)
                     for dirname in os.listdir(self.path_to_folder):
                         path_to_dirname = (os.path.join(self.path_to_folder, dirname))
                         path_to_future_dirname = (os.path.join(self.path_to_fut_folder, dirname)) 
                         if os.path.isdir(path_to_dirname):
                             shutil.copy(self.path_to_file, os.path.join(path_to_future_dirname, "settings.json"))
+                            # Достаем контент.жсон /packages/base.zip/content.json
+                            path_to_zip_dir = os.path.join(path_to_future_dirname, "packages", "base.zip")
+                            with zipfile.ZipFile(path_to_zip_dir) as zf:
+                                zf.extract("content.json", path=path_to_future_dirname)
+
                 except FileExistsError:
                     warn_msg = QMessageBox()
                     warn_msg.setIcon(QMessageBox.Critical)

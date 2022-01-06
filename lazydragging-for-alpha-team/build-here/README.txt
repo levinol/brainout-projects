@@ -5,9 +5,8 @@ ENG HOW TO USE GUIDE:
 - Merge button - will copy alpha builds with your settings next to this application
 
 The workflow after saving the paths looks like this:
-1. Delete the folder with the current builds
-2. Open the application
-3. Click the Merge button
+1. Open the application
+2. Click the Merge button
 
 RU ГАЙД ПО ИСПОЛЬЗОВАНИЮ:
 - Положите файл в папку, комфортную для вас. (Я держу программу на рабочем столе)
@@ -16,6 +15,5 @@ RU ГАЙД ПО ИСПОЛЬЗОВАНИЮ:
 - Merge Button скопирует альфа билды с вашими настройками в папку рядом с этим приложением
 
 Рабочий процесс после сохранения путей выглядит так:
-1. Удалить папку с текущими билдами 
-2. Открыть приложение
-3. Нажать кнопку Merge
+1. Открыть приложение
+2. Нажать кнопку Merge
